@@ -10,4 +10,5 @@ dependencies = [
     "langchain-postgres>=0.0.14",
     "psycopg>=3.2.9",
     "ruff>=0.11.13",
+    "ulid-py>=1.1.0",
 ]
