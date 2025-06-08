@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS db_sessions (
+pnCREATE TABLE IF NOT EXISTS db_sessions (
     id UUID PRIMARY KEY,
     username VARCHAR(255) NOT NULL,
     title VARCHAR(255) NOT NULL,
