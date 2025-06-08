@@ -68,7 +68,8 @@ export const getSessions = createServerFn({
 
     const response: AxiosResponse<SessionData[]> = await axios.get(url)
 
-    return response.data
+    const sessions = response.data.slice(0, 15)
+    return sessions
   } catch (err) {
     console.error(err)
     return []
@@ -201,8 +202,8 @@ function MessageBoxComponent({ message }: { message: MessageData }) {
       {/* Avatar - only show for assistant messages on the left */}
       {isAssistant && (
         <Avatar className="h-8 w-8 shrink-0 items-center justify-center flex">
-          {isUser && <AvatarImage src='https://cdn.reddie.dev/assets/avatar.jpg' alt={message.name} />}
-          {isAssistant && <AvatarImage src='/logo.png' className='size-7 ' alt={message.name} />}
+
+          <AvatarImage src='/logo.png' className='size-7 ' alt={message.name} />
           <AvatarFallback className="bg-primary text-primary-foreground">
             <Bot className="h-4 w-4" />
           </AvatarFallback>
@@ -233,7 +234,7 @@ function MessageBoxComponent({ message }: { message: MessageData }) {
       {/* Avatar - only show for user messages on the right */}
       {isUser && (
         <Avatar className="h-8 w-8 shrink-0">
-          <AvatarImage src="/placeholder.svg?height=32&width=32" alt={message.name} />
+          <AvatarImage src='https://cdn.reddie.dev/assets/avatar.jpg' alt={message.name} />
           <AvatarFallback className="bg-secondary text-secondary-foreground">
             <User className="h-4 w-4" />
           </AvatarFallback>
@@ -358,6 +359,16 @@ function ChatContainer({ open }: { open: boolean }) {
       name: response.data.session.username,
       created_at: new Date().toISOString()
     }])
+
+
+    if (messages.length == 0) {
+      console.log("init invalidating sessions")
+      setTimeout(async () => {
+        console.log("started invalidating sessions")
+        await queryClient.invalidateQueries({ queryKey: ['sessions'] })
+        console.log("invalidated sessions")
+      }, 4 * 1000)
+    }
   }
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
