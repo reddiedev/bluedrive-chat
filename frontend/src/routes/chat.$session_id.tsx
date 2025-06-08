@@ -1,26 +1,24 @@
+import { zodResolver } from '@hookform/resolvers/zod'
+import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
 import { createFileRoute, Link, useNavigate, } from '@tanstack/react-router'
-import { redirect } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import axios, { AxiosResponse } from 'axios'
-import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from '~/components/ui/sidebar'
-import { Button } from '~/components/ui/button'
-import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
-import { ArrowUp, Badge, BookOpenIcon, Bot, Code2Icon, MessageCircleIcon, NewspaperIcon, SearchIcon, SendIcon, StarIcon, StarsIcon, User } from 'lucide-react'
+import { ArrowUp, BookOpenIcon, Bot, Code2Icon, MessageCircleIcon, NewspaperIcon, SearchIcon, StarsIcon, User } from 'lucide-react'
 import { Fragment, useEffect, useRef, useState } from 'react'
-import { cn } from '~/lib/utils'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
+import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
+import { Button } from '~/components/ui/button'
+import { Card, CardContent } from '~/components/ui/card'
+import { Form, FormControl, FormField, FormItem, FormMessage } from '~/components/ui/form'
 import { Input } from '~/components/ui/input'
 import { Separator } from '~/components/ui/separator'
-import { Textarea } from '~/components/ui/textarea'
-import { Card, CardContent } from '~/components/ui/card'
-import { z } from 'zod'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { Form, FormMessage, FormDescription, FormControl, FormLabel, FormItem, FormField } from '~/components/ui/form'
+import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from '~/components/ui/sidebar'
 import { Skeleton } from '~/components/ui/skeleton'
+import { Textarea } from '~/components/ui/textarea'
+import { cn } from '~/lib/utils'
 
-// UUID v4 validation regex
-const UUID_V4_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
 
 
 
@@ -32,7 +30,6 @@ export const Route = createFileRoute('/chat/$session_id')({
   },
   loader: async ({ params }) => {
     const session_id = params.session_id
-    const isValid = UUID_V4_REGEX.test(session_id)
 
     return {
       session_id: session_id,
@@ -100,7 +97,7 @@ function ThreadsSidebar() {
     queryKey: ['sessions', username],
     queryFn: () => getSessions({ data: encodeURIComponent(username) }),
     initialData: [],
-    refetchInterval: 3 * 1000;
+    refetchInterval: 3 * 1000,
   })
   const navigate = useNavigate()
 
@@ -188,6 +185,11 @@ function ThreadsSidebar() {
 
 const queryClient = new QueryClient()
 
+import ReactMarkdown from 'react-markdown'
+import rehypeHighlight from 'rehype-highlight'
+import rehypeRaw from 'rehype-raw'
+import remarkGfm from 'remark-gfm'
+
 function MessageBoxComponent({ message }: { message: MessageData }) {
   const isUser = message.role === "user"
   const isAssistant = message.role === "assistant"
@@ -212,22 +214,65 @@ function MessageBoxComponent({ message }: { message: MessageData }) {
       )}
 
       {/* Message Content */}
-      <div className={cn("flex flex-col gap-1 max-w-[80%] md:max-w-[70%]", isUser && "items-end")}>
+      <div
+        className={cn(
+          "flex flex-col gap-1 max-w-[80%] md:max-w-[70%]",
+          isUser && "items-end"
+        )}
+      >
         {/* Header with name and role */}
-        <div className={cn("flex items-center gap-2 text-xs text-muted-foreground", isUser && "flex-row-reverse")}>
+        <div
+          className={cn(
+            "flex items-center gap-2 text-xs text-muted-foreground",
+            isUser && "flex-row-reverse"
+          )}
+        >
           <span className="font-medium">{message.name}</span>
-
         </div>
 
         {/* Message bubble */}
-        <Card className={cn("shadow-sm p-0", isUser ? "bg-primary text-primary-foreground border-primary" : "bg-muted/50")}>
+        <Card
+          className={cn(
+            "shadow-sm p-0",
+            isUser
+              ? "bg-primary text-primary-foreground border-primary"
+              : "bg-muted/50"
+          )}
+        >
           <CardContent className="p-2">
-            <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+            <div className="text-sm leading-loose prose prose-sm max-w-none dark:prose-invert">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                rehypePlugins={[rehypeHighlight, rehypeRaw]}
+                components={{
+                  // Custom styling for code blocks
+                  pre: ({ children, ...props }) => (
+                    <pre
+                      {...props}
+                      className="bg-gray-100 dark:bg-gray-800 rounded p-2 overflow-x-auto text-xs"
+                    >
+                      {children}
+                    </pre>
+                  ),
+                  // Custom styling for inline code
+                  code: ({ children, ...props }) => (
+                    <code {...props} className="bg-gray-100 dark:bg-gray-800 px-1 rounded text-xs">{children}</code>
+                  ),
+                }}
+              >
+                {message.content}
+              </ReactMarkdown>
+            </div>
           </CardContent>
         </Card>
 
         {/* Timestamp */}
-        <span className={cn("text-xs text-muted-foreground px-1", isUser && "text-right")}>
+        <span
+          className={cn(
+            "text-xs text-muted-foreground px-1",
+            isUser && "text-right"
+          )}
+        >
           {formatTime(message.created_at)}
         </span>
       </div>

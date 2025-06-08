@@ -27,6 +27,7 @@ export const Route = createRootRoute({
       }),
     ],
     links: [
+      { rel: "stylesheet", href: "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark.css" },
       { rel: 'stylesheet', href: appCss, suppressHydrationWarning: false },
       {
         rel: 'apple-touch-icon',
@@ -49,7 +50,8 @@ export const Route = createRootRoute({
       { rel: 'icon', href: '/favicon.ico' },
     ],
     scripts: [
-      { crossOrigin: 'anonymous', src: 'https://unpkg.com/react-scan/dist/auto.global.js' }
+      { crossOrigin: 'anonymous', src: 'https://unpkg.com/react-scan/dist/auto.global.js' },
+      { src: "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" }
     ]
   }),
   errorComponent: (props) => {
