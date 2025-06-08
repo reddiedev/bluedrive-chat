@@ -8,9 +8,11 @@ from langchain_postgres import PostgresChatMessageHistory
 import psycopg
 from psycopg import Connection
 import os
+from fastapi.middleware.cors import CORSMiddleware
+from urllib.parse import unquote
 
 from lib.utils import generate_message_id, is_session_id_valid
-from lib.types import ChatRequest, Session
+from lib.types import ChatRequest, Session, MessageRecord, Message
 
 
 load_dotenv(override=True)
@@ -71,7 +73,7 @@ def get_session_by_id(conn: Connection, session_id: str) -> Session | None:
         )
         result = cur.fetchone()
         if result:
-            return Session(id=result[0], title=result[2], username=result[1])
+            return Session(id=str(result[0]), title=result[2], username=result[1])
         return None
 
 
@@ -104,6 +106,19 @@ create_db_sessions_table(sync_connection)
 
 app = FastAPI()
 
+origins = [
+    "http://localhost",
+    "http://localhost:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 @app.get("/")
 async def root():
@@ -117,18 +132,70 @@ async def health():
 
 @app.get("/sessions")
 async def get_sessions(name: str):
-    print(f"Received /sessions request for user: {name} WHERE username = {name}")
+    formatted_name = unquote(name)
+    print(f"Received /sessions request for user: {formatted_name}")
 
     with sync_connection.cursor() as cur:
         cur.execute(
             "SELECT id, username, title FROM db_sessions WHERE username = %s",
-            (name,),
+            (formatted_name,),
         )
         result = cur.fetchall()
-        print(f"Result: {result}")
+
         return [
             Session(id=str(row[0]), title=row[2], username=row[1]) for row in result
         ]
+
+
+@app.get("/session")
+async def get_session(session_id: str):
+    with sync_connection.cursor() as cur:
+        cur.execute(
+            "SELECT id, username, title FROM db_sessions WHERE id = %s",
+            (session_id,),
+        )
+        result = cur.fetchone()
+
+        if not result:
+            raise HTTPException(status_code=404, detail="Session not found")
+
+        session = Session(id=str(result[0]), title=result[2], username=result[1])
+
+        cur.execute(
+            "SELECT * FROM bd_chat_history WHERE session_id = %s ORDER BY created_at ASC",
+            (session_id,),
+        )
+        result = cur.fetchall()
+
+        if not result:
+            return {
+                "session": session,
+                "messages": [],
+            }
+
+        messages = [
+            MessageRecord(
+                id=row[0], session_id=str(row[1]), message=row[2], created_at=row[3]
+            )
+            for row in result
+        ]
+
+        formatted_messages = [
+            Message(
+                id=str(message.message["data"]["id"]),
+                role=message.message["data"]["type"] == "human"
+                and "user"
+                or "assistant",
+                content=message.message["data"]["content"],
+                name=message.message["data"]["name"],
+                created_at=message.created_at,
+            )
+            for message in messages
+        ]
+        return {
+            "session": session,
+            "messages": formatted_messages,
+        }
 
 
 @app.post("/chat")
@@ -139,12 +206,14 @@ async def chat(request: ChatRequest):
         raise HTTPException(status_code=400, detail="Invalid session ID")
 
     session = get_session_by_id(sync_connection, request.session_id)
+    print(f"Initial Session: {session}")
     if not session:
         title = get_session_title(request.content)
         session = Session(id=request.session_id, title=title, username=request.name)
         create_session_if_not_exists(
             sync_connection, request.session_id, request.name, title
         )
+        print(f"Created Session: {session}")
 
     chat_history = PostgresChatMessageHistory(
         table_name, request.session_id, sync_connection=sync_connection
