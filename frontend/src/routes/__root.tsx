@@ -1,16 +1,15 @@
 import {
   HeadContent,
-  Link,
   Outlet,
   Scripts,
-  createRootRoute,
+  createRootRoute
 } from '@tanstack/react-router'
-import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
-import * as React from 'react'
+import type * as React from 'react'
 import { DefaultCatchBoundary } from '~/components/DefaultCatchBoundary'
 import { NotFound } from '~/components/NotFound'
 import appCss from '~/styles/app.css?url'
 import { seo } from '~/utils/seo'
+import { ThemeProvider } from '~/components/theme-provider'
 
 export const Route = createRootRoute({
   head: () => ({
@@ -64,9 +63,11 @@ export const Route = createRootRoute({
 
 function RootComponent() {
   return (
-    <RootDocument>
-      <Outlet />
-    </RootDocument>
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <RootDocument>
+        <Outlet />
+      </RootDocument>
+    </ThemeProvider>
   )
 }
 
