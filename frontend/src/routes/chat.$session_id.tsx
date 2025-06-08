@@ -2,18 +2,14 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
 import { createFileRoute, Link, useNavigate, } from '@tanstack/react-router'
 import axios, { AxiosResponse } from 'axios'
-import { ArrowUp, BookOpenIcon, Bot, Code2Icon, MessageCircleIcon, NewspaperIcon, SearchIcon, StarsIcon, User } from 'lucide-react'
+import { ArrowUp, BookOpenIcon, Code2Icon, MessageCircleIcon, NewspaperIcon, SearchIcon, StarsIcon } from 'lucide-react'
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import ReactMarkdown from 'react-markdown'
-import rehypeHighlight from 'rehype-highlight'
-import rehypeRaw from 'rehype-raw'
-import remarkGfm from 'remark-gfm'
 import { z } from 'zod'
+import { MessageBox } from '~/components/chat/messages'
 
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
 import { Button } from '~/components/ui/button'
-import { Card, CardContent } from '~/components/ui/card'
 import { Form, FormControl, FormField, FormItem, FormMessage } from '~/components/ui/form'
 import { Input } from '~/components/ui/input'
 import { Separator } from '~/components/ui/separator'
@@ -22,12 +18,11 @@ import { Skeleton } from '~/components/ui/skeleton'
 import { Textarea } from '~/components/ui/textarea'
 
 
-
-
 import { getSession, getSessions } from '~/lib/api'
 import { ChatResponse, MessageData } from '~/lib/api.types'
 import { cn } from '~/lib/utils'
 
+const queryClient = new QueryClient()
 
 export const Route = createFileRoute('/chat/$session_id')({
   validateSearch: (search: Record<string, unknown>) => {
@@ -45,8 +40,6 @@ export const Route = createFileRoute('/chat/$session_id')({
   component: RouteComponent,
 })
 
-
-
 function ThreadsSidebar() {
   const { username } = Route.useSearch()
   const { data: sessions } = useQuery({
@@ -56,8 +49,6 @@ function ThreadsSidebar() {
     refetchInterval: 3 * 1000,
   })
   const navigate = useNavigate()
-
-
 
   return (
     <Sidebar className='dark:bg-neutral-950 bg-neutral-950 z-10 '>
@@ -139,110 +130,6 @@ function ThreadsSidebar() {
   )
 }
 
-const queryClient = new QueryClient()
-
-
-
-function MessageBoxComponent({ message }: { message: MessageData }) {
-  const isUser = message.role === "user"
-  const isAssistant = message.role === "assistant"
-
-  // Format the timestamp
-  const formatTime = (timestamp: string) => {
-    const date = new Date(timestamp)
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-  }
-
-  return (
-    <div className={cn("flex w-full gap-3 p-4", isUser ? "justify-end" : "justify-start")}>
-      {/* Avatar - only show for assistant messages on the left */}
-      {isAssistant && (
-        <Avatar className="h-8 w-8 shrink-0 items-center justify-center flex">
-
-          <AvatarImage src='/logo.png' className='size-7 ' alt={message.name} />
-          <AvatarFallback className="bg-primary text-primary-foreground">
-            <Bot className="h-4 w-4" />
-          </AvatarFallback>
-        </Avatar>
-      )}
-
-      {/* Message Content */}
-      <div
-        className={cn(
-          "flex flex-col gap-1 max-w-[80%] md:max-w-[70%]",
-          isUser && "items-end"
-        )}
-      >
-        {/* Header with name and role */}
-        <div
-          className={cn(
-            "flex items-center gap-2 text-xs text-muted-foreground",
-            isUser && "flex-row-reverse"
-          )}
-        >
-          <span className="font-medium">{message.name}</span>
-        </div>
-
-        {/* Message bubble */}
-        <Card
-          className={cn(
-            "shadow-sm p-0",
-            isUser
-              ? "bg-primary text-primary-foreground border-primary"
-              : "bg-muted/50"
-          )}
-        >
-          <CardContent className="p-2">
-            <div className="text-sm leading-loose prose prose-sm max-w-none dark:prose-invert">
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                rehypePlugins={[rehypeHighlight, rehypeRaw]}
-                components={{
-                  // Custom styling for code blocks
-                  pre: ({ children, ...props }) => (
-                    <pre
-                      {...props}
-                      className="bg-gray-100 dark:bg-gray-800 rounded p-2 overflow-x-auto text-xs"
-                    >
-                      {children}
-                    </pre>
-                  ),
-                  // Custom styling for inline code
-                  code: ({ children, ...props }) => (
-                    <code {...props} className="bg-gray-100 dark:bg-gray-800 px-1 rounded text-xs">{children}</code>
-                  ),
-                }}
-              >
-                {message.content}
-              </ReactMarkdown>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Timestamp */}
-        <span
-          className={cn(
-            "text-xs text-muted-foreground px-1",
-            isUser && "text-right"
-          )}
-        >
-          {formatTime(message.created_at)}
-        </span>
-      </div>
-
-      {/* Avatar - only show for user messages on the right */}
-      {isUser && (
-        <Avatar className="h-8 w-8 shrink-0">
-          <AvatarImage src='https://cdn.reddie.dev/assets/avatar.jpg' alt={message.name} />
-          <AvatarFallback className="bg-secondary text-secondary-foreground">
-            <User className="h-4 w-4" />
-          </AvatarFallback>
-        </Avatar>
-      )}
-    </div>
-  )
-}
-
 function MessagesContainer({ messages }: { messages: MessageData[] }) {
   const { username } = Route.useSearch()
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -280,17 +167,12 @@ function MessagesContainer({ messages }: { messages: MessageData[] }) {
           </div>
         </div>}
       {messages.map((message) => (
-        <MessageBoxComponent key={message.id} message={message} />
+        <MessageBox key={message.id} message={message} />
       ))}
       <div ref={messagesEndRef} />
     </div>
   )
 }
-
-
-
-
-
 
 function ChatContainer({ open }: { open: boolean }) {
   const { username } = Route.useSearch()
@@ -450,7 +332,6 @@ function RouteComponent() {
       <QueryClientProvider client={queryClient}>
         <div className=' bg-neutral-950 relative w-full font-display text-white min-h-screen max-h-screen h-screen flex flex-row'>
           <div>
-
             <SidebarTrigger className='absolute top-3 left-4 z-40 bg-neutral-950 p-4 rounded-lg shadow-lg cursor-pointer' />
           </div>
           <ThreadsSidebar />
