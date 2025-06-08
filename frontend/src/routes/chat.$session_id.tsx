@@ -99,7 +99,8 @@ function ThreadsSidebar() {
   const { data: sessions } = useQuery({
     queryKey: ['sessions', username],
     queryFn: () => getSessions({ data: encodeURIComponent(username) }),
-    initialData: []
+    initialData: [],
+    refetchInterval: 3 * 1000;
   })
   const navigate = useNavigate()
 
