@@ -1,12 +1,16 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
 import { createFileRoute, Link, useNavigate, } from '@tanstack/react-router'
-import { createServerFn } from '@tanstack/react-start'
 import axios, { AxiosResponse } from 'axios'
 import { ArrowUp, BookOpenIcon, Bot, Code2Icon, MessageCircleIcon, NewspaperIcon, SearchIcon, StarsIcon, User } from 'lucide-react'
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import ReactMarkdown from 'react-markdown'
+import rehypeHighlight from 'rehype-highlight'
+import rehypeRaw from 'rehype-raw'
+import remarkGfm from 'remark-gfm'
 import { z } from 'zod'
+
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
 import { Button } from '~/components/ui/button'
 import { Card, CardContent } from '~/components/ui/card'
@@ -16,10 +20,13 @@ import { Separator } from '~/components/ui/separator'
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from '~/components/ui/sidebar'
 import { Skeleton } from '~/components/ui/skeleton'
 import { Textarea } from '~/components/ui/textarea'
+
+
+
+
+import { getSession, getSessions } from '~/lib/api'
+import { ChatResponse, MessageData } from '~/lib/api.types'
 import { cn } from '~/lib/utils'
-
-
-
 
 
 export const Route = createFileRoute('/chat/$session_id')({
@@ -38,58 +45,7 @@ export const Route = createFileRoute('/chat/$session_id')({
   component: RouteComponent,
 })
 
-type SessionData = {
-  id: string,
-  title: string,
-  username: string
-}
 
-type MessageData = {
-  id: string,
-  role: "user" | "assistant",
-  content: string,
-  name: string,
-  created_at: string
-}
-
-export const getSessions = createServerFn({
-  method: 'GET',
-  response: 'data',
-}).validator((name: string) => {
-  return {
-    name: name,
-  }
-}).handler(async ({ data }) => {
-  try {
-    const url = `${import.meta.env.VITE_BACKEND_BASE_URL}/sessions?name=${data.name}`
-
-    const response: AxiosResponse<SessionData[]> = await axios.get(url)
-
-    const sessions = response.data.slice(0, 15)
-    return sessions
-  } catch (err) {
-    console.error(err)
-    return []
-  }
-})
-
-export const getSession = createServerFn({
-  method: 'GET',
-  response: 'data',
-}).validator((session_id: string) => {
-  return {
-    session_id: session_id,
-  }
-}).handler(async ({ data }) => {
-  try {
-    const url = `${import.meta.env.VITE_BACKEND_BASE_URL}/session?session_id=${data.session_id}`
-    const response: AxiosResponse<{ session: SessionData, messages: MessageData[] }> = await axios.get(url)
-    return response.data
-  } catch (err) {
-    console.error(err)
-    return { session: null, messages: [] }
-  }
-})
 
 function ThreadsSidebar() {
   const { username } = Route.useSearch()
@@ -185,10 +141,7 @@ function ThreadsSidebar() {
 
 const queryClient = new QueryClient()
 
-import ReactMarkdown from 'react-markdown'
-import rehypeHighlight from 'rehype-highlight'
-import rehypeRaw from 'rehype-raw'
-import remarkGfm from 'remark-gfm'
+
 
 function MessageBoxComponent({ message }: { message: MessageData }) {
   const isUser = message.role === "user"
@@ -334,20 +287,18 @@ function MessagesContainer({ messages }: { messages: MessageData[] }) {
   )
 }
 
-const newMessageSchema = z.object({
-  content: z.string().min(1),
-})
 
-type ChatResponse = {
-  message: string;
-  session: SessionData;
-  messages: MessageData[];
-}
+
+
 
 
 function ChatContainer({ open }: { open: boolean }) {
   const { username } = Route.useSearch()
   const { session_id } = Route.useParams()
+
+  const newMessageSchema = z.object({
+    content: z.string().min(1),
+  })
 
 
   const [messages, setMessages] = useState<MessageData[]>([])
