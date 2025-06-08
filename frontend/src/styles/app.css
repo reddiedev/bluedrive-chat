@@ -29,3 +29,4 @@
 }
 
 @layer theme, base, components, utilities;
+@plugin 'tailwind-scrollbar';
