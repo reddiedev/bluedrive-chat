@@ -166,7 +166,6 @@ async def health():
 @app.get("/sessions")
 async def get_sessions(name: str):
     formatted_name = unquote(name)
-    print(f"Received /sessions request for user: {formatted_name}")
 
     with sync_connection.cursor() as cur:
         cur.execute(
@@ -233,26 +232,22 @@ async def get_session(session_id: str):
 
 @app.post("/chat")
 async def chat(request: ChatRequest):
-    print(f"Received request: {request}")
-
     if not is_session_id_valid(request.session_id):
         raise HTTPException(status_code=400, detail="Invalid session ID")
 
     session = get_session_by_id(sync_connection, request.session_id)
-    print(f"Initial Session: {session}")
+
     if not session:
         title = get_session_title(request.content)
         session = Session(id=request.session_id, title=title, username=request.name)
         create_session_if_not_exists(
             sync_connection, request.session_id, request.name, title
         )
-        print(f"Created Session: {session}")
 
     chat_history = PostgresChatMessageHistory(
         table_name, request.session_id, sync_connection=sync_connection
     )
     prev_messages = chat_history.get_messages()
-    print(f"Previous messages: {prev_messages}")
 
     new_usr_msg = HumanMessage(
         content=request.content, id=generate_message_id(), name=request.name
@@ -264,7 +259,6 @@ async def chat(request: ChatRequest):
     new_ai_msg = AIMessage(content=response, id=generate_message_id(), name="Assistant")
 
     chat_history.add_messages([new_usr_msg, new_ai_msg])
-    print(f"Response: {response}")
 
     return {
         "message": response,
