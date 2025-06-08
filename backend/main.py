@@ -51,7 +51,7 @@ def create_db_sessions_table(conn: Connection):
         cur.execute(
             """
             CREATE TABLE IF NOT EXISTS db_sessions (
-                id VARCHAR(255) PRIMARY KEY,
+                id UUID PRIMARY KEY,
                 username VARCHAR(255) NOT NULL,
                 title VARCHAR(255) NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
