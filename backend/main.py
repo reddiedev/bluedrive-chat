@@ -10,7 +10,7 @@ from psycopg import Connection
 import os
 
 from lib.utils import generate_message_id, is_session_id_valid
-from lib.types import ChatRequest, Session
+from lib.types import ChatRequest, Session, SessionsRequest
 
 
 load_dotenv(override=True)
@@ -115,6 +115,21 @@ async def health():
     return {"message": "OK!"}
 
 
+@app.get("/sessions")
+async def get_sessions(name: str):
+    print(f"Received /sessions request for user: {name}")
+
+    with sync_connection.cursor() as cur:
+        cur.execute(
+            "SELECT id, username, title FROM db_sessions",
+        )
+        result = cur.fetchall()
+        print(f"Result: {result}")
+        return [
+            Session(id=str(row[0]), title=row[2], username=row[1]) for row in result
+        ]
+
+
 @app.post("/chat")
 async def chat(request: ChatRequest):
     print(f"Received request: {request}")
@@ -156,7 +171,7 @@ async def chat(request: ChatRequest):
 
 
 def main():
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=os.getenv("PORT", 8000), reload=True)
 
 
 if __name__ == "__main__":
