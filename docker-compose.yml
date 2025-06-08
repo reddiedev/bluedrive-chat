@@ -1,7 +1,10 @@
 services:
   ollama:
-    image: ollama/ollama:latest
+    image: bd_ollama:latest
     container_name: bd_ollama
+    build:
+      context: ./ollama        
+      dockerfile: Dockerfile
     ports:
       - "11435:11434"
     volumes:
@@ -10,6 +13,8 @@ services:
       - OLLAMA_KEEP_ALIVE=24h 
       - OLLAMA_HOST=0.0.0.0
     restart: unless-stopped
+    networks:
+      - default
     deploy:
       resources:
         reservations:
@@ -20,3 +25,7 @@ services:
 
 volumes:
   bd_ollama_data:
+
+networks:
+  default:
+    driver: bridge
