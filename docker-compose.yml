@@ -29,6 +29,20 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+  backend:
+    image: bd_backend:latest
+    container_name: bd_backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8002:8000"
+    environment:
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5-coder:1.5b}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434}
+    networks:
+      bd_network:
+        ipv4_address: ${BACKEND_IP:-172.28.0.20}
 
 volumes:
   bd_ollama_data:
