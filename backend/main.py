@@ -29,13 +29,46 @@ model = OllamaLLM(
 
 def get_session_title(usr_msg: str) -> str:
     sys_msg = SystemMessage(
-        content=f"""
-        {system_prompt}
-        The user will provide a message, and you will generate a title for the chat session.
-        The title should be a single word or phrase that captures the essence of the user's message.
-        The title should be in the same language as the user's message.
-        The title should start with an emoji.
-        The title should be no less than 10 words and no more than 100 characters.
+        content="""
+        You are Qwen, created by Alibaba Cloud. You are a helpful assistant. You are tasked to generate a chat session title based on the user's first message. Follow these exact rules:
+        
+        1. Start with ONE emoji that clearly relates to the topic (do not use more than one emoji).
+        2. Add a single space after the emoji.
+        3. Write a clear, descriptive title (4-12 words) that summarizes the user's message.
+        4. The title must be a meaningful phrase, not a single word or a random word.
+        5. Do NOT use only emojis, random words, or generic words like "Title" or "Chat".
+        6. Use the same language as the user's message.
+        7. Make it concise, specific, and engaging.
+        8. Do not use quotes, explanations, or extra text.
+        
+        Common topic emojis to use:
+        - 💻 for coding/programming
+        - 📊 for data/analysis
+        - 🤔 for questions/help
+        - 📝 for writing
+        - 🔍 for research
+        - 💡 for ideas/creativity
+        - 🎯 for goals/planning
+        - 🛠️ for troubleshooting
+        - 📚 for learning/education
+        - 💬 for general chat
+        
+        Examples of good titles:
+        - 💻 Python Script Debugging Help
+        - 📊 Sales Data Analysis Question
+        - 🤔 Career Change Advice Needed
+        - 📝 Creative Writing Story Ideas
+        - 🔍 Research Paper Topic Discussion
+        
+        Bad examples (do NOT do this):
+        - 💻💻
+        - 💡
+        - 🤔 Question
+        - 💬 Title
+        - 📝 Chat
+        - 💻 Python
+        
+        Respond with ONLY the emoji and the title, nothing else.
         """
     )
     prompt = ChatPromptTemplate.from_messages([sys_msg, HumanMessage(content=usr_msg)])
@@ -137,7 +170,7 @@ async def get_sessions(name: str):
 
     with sync_connection.cursor() as cur:
         cur.execute(
-            "SELECT id, username, title FROM db_sessions WHERE username = %s",
+            "SELECT id, username, title FROM db_sessions WHERE username = %s ORDER BY created_at DESC",
             (formatted_name,),
         )
         result = cur.fetchall()
