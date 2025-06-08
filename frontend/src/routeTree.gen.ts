@@ -12,12 +12,19 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as IndexImport } from './routes/index'
+import { Route as ChatSessionidImport } from './routes/chat.$session_id'
 
 // Create/Update Routes
 
 const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const ChatSessionidRoute = ChatSessionidImport.update({
+  id: '/chat/$session_id',
+  path: '/chat/$session_id',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -32,6 +39,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
+    '/chat/$session_id': {
+      id: '/chat/$session_id'
+      path: '/chat/$session_id'
+      fullPath: '/chat/$session_id'
+      preLoaderRoute: typeof ChatSessionidImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -39,32 +53,37 @@ declare module '@tanstack/react-router' {
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/chat/$session_id': typeof ChatSessionidRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/chat/$session_id': typeof ChatSessionidRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
+  '/chat/$session_id': typeof ChatSessionidRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/chat/$session_id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/chat/$session_id'
+  id: '__root__' | '/' | '/chat/$session_id'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ChatSessionidRoute: typeof ChatSessionidRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ChatSessionidRoute: ChatSessionidRoute,
 }
 
 export const routeTree = rootRoute
@@ -77,11 +96,15 @@ export const routeTree = rootRoute
     "__root__": {
       "filePath": "__root.tsx",
       "children": [
-        "/"
+        "/",
+        "/chat/$session_id"
       ]
     },
     "/": {
       "filePath": "index.tsx"
+    },
+    "/chat/$session_id": {
+      "filePath": "chat.$session_id.tsx"
     }
   }
 }

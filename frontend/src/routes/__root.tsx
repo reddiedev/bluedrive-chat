@@ -2,14 +2,13 @@ import {
   HeadContent,
   Outlet,
   Scripts,
-  createRootRoute
+  createRootRoute,
 } from '@tanstack/react-router'
 import type * as React from 'react'
 import { DefaultCatchBoundary } from '~/components/DefaultCatchBoundary'
 import { NotFound } from '~/components/NotFound'
 import appCss from '~/styles/app.css?url'
 import { seo } from '~/utils/seo'
-import { ThemeProvider } from '~/components/theme-provider'
 
 export const Route = createRootRoute({
   head: () => ({
@@ -28,7 +27,7 @@ export const Route = createRootRoute({
       }),
     ],
     links: [
-      { rel: 'stylesheet', href: appCss },
+      { rel: 'stylesheet', href: appCss, suppressHydrationWarning: false },
       {
         rel: 'apple-touch-icon',
         sizes: '180x180',
@@ -63,21 +62,21 @@ export const Route = createRootRoute({
 
 function RootComponent() {
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <RootDocument>
-        <Outlet />
-      </RootDocument>
-    </ThemeProvider>
+
+    <RootDocument>
+      <Outlet />
+    </RootDocument>
+
   )
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html>
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         {children}
         <Scripts />
       </body>

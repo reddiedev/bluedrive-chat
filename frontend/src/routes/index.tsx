@@ -1,12 +1,11 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { Button } from '~/components/ui/button'
-import { z } from 'zod'
-import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Form, FormDescription, FormMessage } from '~/components/ui/form'
-import { FormControl, FormField, FormItem, FormLabel } from '~/components/ui/form'
-import { Input } from '~/components/ui/input'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
+import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '~/components/ui/form'
+import { Input } from '~/components/ui/input'
 
 export const Route = createFileRoute('/')({
   component: Home,
@@ -17,6 +16,7 @@ const usernameFormSchema = z.object({
 })
 
 function UsernameForm() {
+  const navigate = useNavigate()
   const form = useForm<z.infer<typeof usernameFormSchema>>({
     resolver: zodResolver(usernameFormSchema),
     defaultValues: {
@@ -25,14 +25,20 @@ function UsernameForm() {
   })
 
   function onSubmit(values: z.infer<typeof usernameFormSchema>) {
-    console.log(values)
+    // generate uuid v4 
+    const { username } = values
+    const session_id = crypto.randomUUID()
+    console.log(session_id, username)
+    navigate({ to: '/chat/$session_id', params: { session_id }, search: { username } })
   }
 
   return (
     <Card className='min-w-[30rem]'>
       <CardHeader>
-        <CardTitle className='text-2xl font-semibold'>
-          Welcome to Bard!
+        <CardTitle className='text-2xl font-semibold flex items-center'>
+          <span >Welcome to</span> <Link to="/" className='flex items-center hover:text-neutral-300 transition-colors ease-in-out duration-300'>
+            <img src="/logo.png" alt="Bard" className='ml-2 mr-1 size-6' height={512} width={512} /> Bard
+          </Link>
         </CardTitle>
         <CardDescription className='text-neutral-500 font-normal text-sm'>
           Please enter your username to continue
