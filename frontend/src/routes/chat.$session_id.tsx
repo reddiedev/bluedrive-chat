@@ -3,7 +3,9 @@ import { redirect } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import axios, { AxiosResponse } from 'axios'
 import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from '~/components/ui/sidebar'
+import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from '~/components/ui/sidebar'
+import { Button } from '~/components/ui/button'
+import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
 
 // UUID v4 validation regex
 const UUID_V4_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
@@ -57,7 +59,7 @@ export const getSessions = createServerFn({
 
 
 
-function AppSidebar() {
+function ThreadsSidebar() {
   const { username } = Route.useSearch()
   const { data: sessions } = useQuery({
     queryKey: ['sessions'],
@@ -67,21 +69,40 @@ function AppSidebar() {
 
   return (
     <Sidebar className='dark:bg-neutral-950 bg-neutral-950'>
+
+
+      <SidebarHeader className='px-4 pt-6'>
+        <div className='flex items-center gap-2'>
+          <Avatar className='size-6'>
+            <AvatarImage src='https://cdn.reddie.dev/assets/avatar.jpg' />
+            <AvatarFallback>?</AvatarFallback>
+          </Avatar>
+
+          {username}
+        </div>
+
+      </SidebarHeader>
+
+
       <SidebarContent className='dark:bg-neutral-950 bg-neutral-950 text-white'>
         <SidebarGroup>
           <SidebarGroupLabel className='text-white'>
             Threads
           </SidebarGroupLabel>
           <SidebarGroupContent className='flex flex-col gap-2'>
-            {sessions?.map((session) => <SidebarMenuItem key={session.id}>
-              <SidebarMenuButton asChild>
-                <span className='whitespace-nowrap text-clip'>{session.title}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>)}
+            {sessions?.map((session) =>
+              <SidebarMenuItem key={session.id}>
+                <SidebarMenuButton asChild>
+                  <Button variant='ghost' className='cursor-pointer justify-start truncate'>
+                    {session.title}
+                  </Button>
+                </SidebarMenuButton>
+              </SidebarMenuItem>)}
 
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
     </Sidebar>
   )
 }
@@ -111,7 +132,7 @@ function RouteComponent() {
       <QueryClientProvider client={queryClient}>
 
         <div className='bg-neutral-950 w-full font-display text-white min-h-screen max-h-screen h-screen flex flex-row'>
-          <AppSidebar />
+          <ThreadsSidebar />
           <main>
             <SidebarTrigger />
             <ChatContainer />
