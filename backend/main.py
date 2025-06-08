@@ -117,11 +117,12 @@ async def health():
 
 @app.get("/sessions")
 async def get_sessions(name: str):
-    print(f"Received /sessions request for user: {name}")
+    print(f"Received /sessions request for user: {name} WHERE username = {name}")
 
     with sync_connection.cursor() as cur:
         cur.execute(
-            "SELECT id, username, title FROM db_sessions",
+            "SELECT id, username, title FROM db_sessions WHERE username = %s",
+            (name,),
         )
         result = cur.fetchall()
         print(f"Result: {result}")
