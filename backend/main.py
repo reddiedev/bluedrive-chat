@@ -10,7 +10,7 @@ from psycopg import Connection
 import os
 
 from lib.utils import generate_message_id, is_session_id_valid
-from lib.types import ChatRequest, Session, SessionsRequest
+from lib.types import ChatRequest, Session
 
 
 load_dotenv(override=True)
