@@ -14,7 +14,8 @@ services:
       - OLLAMA_HOST=0.0.0.0
     restart: unless-stopped
     networks:
-      - default
+      bd_network:
+        ipv4_address: ${OLLAMA_IP_ADDRESS:-172.28.0.10}
     deploy:
       resources:
         reservations:
@@ -33,5 +34,9 @@ volumes:
   bd_ollama_data:
 
 networks:
-  default:
+  bd_network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+          gateway: 172.28.0.1
