@@ -1,0 +1,22 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: bd_ollama
+    ports:
+      - "11435:11434"
+    volumes:
+      - bd_ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h 
+      - OLLAMA_HOST=0.0.0.0
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+volumes:
+  bd_ollama_data:
