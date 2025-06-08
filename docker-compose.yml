@@ -28,7 +28,22 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
-      start_period: 10s
+      start_period: 10s 
+  db:
+    image: postgres:16
+    restart: always
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    networks:
+      bd_network:
+        ipv4_address: ${DB_IP:-172.28.0.30}
+    volumes:
+      - bd_pgdata:/var/lib/postgresql/data
+ 
   backend:
     image: bd_backend:latest
     container_name: bd_backend
@@ -43,9 +58,12 @@ services:
     networks:
       bd_network:
         ipv4_address: ${BACKEND_IP:-172.28.0.20}
+    depends_on:
+      - db
 
 volumes:
   bd_ollama_data:
+  bd_pgdata:
 
 networks:
   bd_network:
