@@ -5,12 +5,13 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langchain_ollama.llms import OllamaLLM
 from langchain_postgres import PostgresChatMessageHistory
+from langchain_core.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 import psycopg
 from psycopg import Connection
 import os
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from urllib.parse import unquote
-
 from lib.utils import generate_message_id, is_session_id_valid
 from lib.types import ChatRequest, Session, MessageRecord, Message
 
@@ -23,7 +24,8 @@ system_prompt = (
 )
 sys_msg = SystemMessage(content=system_prompt)
 model = OllamaLLM(
-    model=os.getenv("OLLAMA_MODEL"), base_url=os.getenv("OLLAMA_BASE_URL")
+    model=os.getenv("OLLAMA_MODEL"),
+    base_url=os.getenv("OLLAMA_BASE_URL"),
 )
 
 
@@ -265,6 +267,45 @@ async def chat(request: ChatRequest):
         "session": session,
         "messages": chat_history.get_messages(),
     }
+
+
+@app.post("/stream")
+async def stream(request: ChatRequest):
+    if not is_session_id_valid(request.session_id):
+        raise HTTPException(status_code=400, detail="Invalid session ID")
+
+    session = get_session_by_id(sync_connection, request.session_id)
+    if not session:
+        title = get_session_title(request.content)
+        session = Session(id=request.session_id, title=title, username=request.name)
+        create_session_if_not_exists(
+            sync_connection, request.session_id, request.name, title
+        )
+
+    chat_history = PostgresChatMessageHistory(
+        table_name, request.session_id, sync_connection=sync_connection
+    )
+    prev_messages = chat_history.get_messages()
+
+    new_usr_msg = HumanMessage(
+        content=request.content, id=generate_message_id(), name=request.name
+    )
+    prompt = ChatPromptTemplate.from_messages([sys_msg] + prev_messages + [new_usr_msg])
+
+    handler = StreamingStdOutCallbackHandler()
+
+    model_with_streaming = OllamaLLM(
+        model=os.getenv("OLLAMA_MODEL"),
+        base_url=os.getenv("OLLAMA_BASE_URL"),
+        streaming=True,
+        callbacks=[handler],
+    )
+
+    chain = prompt | model_with_streaming
+
+    response = chain.stream({"content": request.content})
+
+    return StreamingResponse(response, media_type="text/plain")
 
 
 def main():
