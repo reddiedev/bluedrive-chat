@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start"
 import axios, { AxiosResponse } from "axios"
-import { MessageData, SessionData } from "~/lib/api.types"
+import { MessageData, ModelData, SessionData } from "~/lib/api.types"
 
 export const getSessions = createServerFn({
   method: 'GET',
@@ -18,7 +18,7 @@ export const getSessions = createServerFn({
     const sessions = response.data.slice(0, 15)
     return sessions
   } catch (err) {
-    console.error(err)
+    // console.error(err)
     return []
   }
 })
@@ -36,7 +36,21 @@ export const getSession = createServerFn({
     const response: AxiosResponse<{ session: SessionData, messages: MessageData[] }> = await axios.get(url)
     return response.data
   } catch (err) {
-    console.error(err)
+    // console.error(err)
     return { session: null, messages: [] }
+  }
+})
+
+export const getModels = createServerFn({
+  method: 'GET',
+  response: 'data',
+}).handler(async () => {
+  try {
+    const url = `${import.meta.env.VITE_BACKEND_BASE_URL}/models`
+    const response: AxiosResponse<ModelData[]> = await axios.get(url)
+    return response.data
+  } catch (err) {
+    // console.error(err)
+    return []
   }
 })

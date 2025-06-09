@@ -10,16 +10,17 @@ import { MessageBox } from '~/components/chat/messages'
 
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
 import { Button } from '~/components/ui/button'
-import { Form, FormControl, FormField, FormItem, FormMessage } from '~/components/ui/form'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '~/components/ui/form'
 import { Input } from '~/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select'
 import { Separator } from '~/components/ui/separator'
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from '~/components/ui/sidebar'
 import { Skeleton } from '~/components/ui/skeleton'
 import { Textarea } from '~/components/ui/textarea'
 
 
-import { getSession, getSessions } from '~/lib/api'
-import { ChatResponse, MessageData } from '~/lib/api.types'
+import { getSession, getSessions, getModels } from '~/lib/api'
+import { MessageData } from '~/lib/api.types'
 import { cn } from '~/lib/utils'
 
 const queryClient = new QueryClient()
@@ -30,11 +31,19 @@ export const Route = createFileRoute('/chat/$session_id')({
       username: (search.username as string) || 'User',
     }
   },
-  loader: async ({ params }) => {
+  beforeLoad: async () => {
+    const models = await getModels()
+    return {
+      models: models,
+    }
+  },
+  loader: async ({ params, context }) => {
     const session_id = params.session_id
+    const models = context.models
 
     return {
       session_id: session_id,
+      models: models,
     }
   },
   component: RouteComponent,
@@ -132,15 +141,7 @@ function ThreadsSidebar() {
 
 function MessagesContainer({ messages }: { messages: MessageData[] }) {
   const { username } = Route.useSearch()
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
 
   return (
     <div className='flex flex-col grow'>
@@ -169,7 +170,7 @@ function MessagesContainer({ messages }: { messages: MessageData[] }) {
       {messages.map((message) => (
         <MessageBox key={message.id} message={message} />
       ))}
-      <div ref={messagesEndRef} />
+
     </div>
   )
 }
@@ -177,20 +178,30 @@ function MessagesContainer({ messages }: { messages: MessageData[] }) {
 function ChatContainer({ open }: { open: boolean }) {
   const { username } = Route.useSearch()
   const { session_id } = Route.useParams()
+  const { models } = Route.useLoaderData()
+  const mainRef = useRef<HTMLDivElement>(null)
 
   const newMessageSchema = z.object({
     content: z.string().min(1),
+    model: z.string().min(1),
   })
-
 
   const [messages, setMessages] = useState<MessageData[]>([])
 
   const { data: sessionData } = useQuery({
     queryKey: ['session', session_id],
     queryFn: () => getSession({ data: session_id }),
-
   })
 
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    if (mainRef.current) {
+      mainRef.current.scrollTo({
+        top: mainRef.current.scrollHeight,
+        behavior: 'smooth'
+      })
+    }
+  }, [messages])
 
   useEffect(() => {
     if (sessionData && 'messages' in sessionData) {
@@ -204,6 +215,7 @@ function ChatContainer({ open }: { open: boolean }) {
     resolver: zodResolver(newMessageSchema),
     defaultValues: {
       content: "",
+      model: models[0].model,
     },
   })
 
@@ -242,7 +254,8 @@ function ChatContainer({ open }: { open: boolean }) {
         body: JSON.stringify({
           name: username,
           session_id: session_id,
-          content: content
+          content: content,
+          model: values.model
         })
       })
 
@@ -314,22 +327,24 @@ function ChatContainer({ open }: { open: boolean }) {
   }, []);
 
 
+
+
+
   return (
-    <main className={cn('flex grow dark:bg-neutral-900 flex-col items-center justify-center rounded-lg transition-all duration-300 ease-in-out  overflow-y-scroll scrollbar-none', open && "mt-4 ml-4")}>
+    <main ref={mainRef} className={cn('flex grow dark:bg-neutral-900 flex-col items-center justify-center rounded-lg transition-all duration-300 ease-in-out overflow-y-scroll scrollbar-none', open && "mt-4 ml-4")}>
       <div className="flex flex-col max-w-[50rem] w-[50rem] h-full">
         <MessagesContainer messages={messages} />
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleMessageSubmit)} className="flex flex-col space-y-8">
-            <FormField
-              control={form.control}
-              name="content"
-              render={({ field }) => (
-                <FormItem>
-
-                  <FormControl>
-                    <div className="flex flex-row items-center gap-2 p-2 bg-neutral-950 rounded-xl rounded-b-none pb-0">
-                      <div className="rounded-xl bg-neutral-900 w-full flex flex-col rounded-b-none pb-0">
-                        <div className="p-2">
+            <div className="flex flex-row items-center gap-2 p-2 bg-neutral-950 rounded-xl rounded-b-none pb-0">
+              <div className="rounded-xl bg-neutral-900 w-full flex flex-col rounded-b-none pb-0">
+                <div className="p-2">
+                  <FormField
+                    control={form.control}
+                    name="content"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
                           <Textarea
                             placeholder="Type your message..."
                             className="border-none p-2 scrollbar-none bg-neutral-900 px-0 py-2 dark:bg-neutral-900 dark:selection:bg-neutral-900 focus-visible:ring-0 resize-none"
@@ -344,24 +359,44 @@ function ChatContainer({ open }: { open: boolean }) {
                             {...field}
                             ref={textareaRef}
                           />
-                        </div>
-                        <div className="p-2 pt-0 flex justify-between items-center">
-                          <span>Qwen2.5 - Coder (1.5B)</span>
-                          <Button size="icon" type="submit" className='cursor-pointer'>
-                            <ArrowUp />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </FormControl>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="p-2 pt-0 flex justify-between items-center">
+                  <FormField
+                    control={form.control}
+                    name="model"
+                    render={({ field }) => (
+                      <FormItem>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a model" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {models.map((model) => (
+                              <SelectItem key={model.model} value={model.model}>{model.model}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
 
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                      </FormItem>
+                    )}
+                  />
+
+                  <Button size="icon" type="submit" className='cursor-pointer'>
+                    <ArrowUp />
+                  </Button>
+                </div>
+              </div>
+            </div>
+
           </form>
         </Form>
-
       </div>
     </main>
   )
@@ -372,10 +407,8 @@ function RouteComponent() {
   return (
     <SidebarProvider open={open} onOpenChange={setOpen}>
       <QueryClientProvider client={queryClient}>
-        <div className=' bg-neutral-950 relative w-full font-display text-white min-h-screen max-h-screen h-screen flex flex-row'>
-          <div>
-            <SidebarTrigger className='absolute top-3 left-4 z-40 bg-neutral-950 p-4 rounded-lg shadow-lg cursor-pointer' />
-          </div>
+        <div className='bg-neutral-950 relative w-full font-display text-white h-screen max-h-screen overflow-hidden flex flex-row'>
+          <SidebarTrigger className='absolute top-3 left-4 z-40 bg-neutral-950 p-4 rounded-lg shadow-lg cursor-pointer' />
           <ThreadsSidebar />
           <ChatContainer open={open} />
         </div>
