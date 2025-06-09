@@ -53,16 +53,16 @@ function UsernameForm() {
                 <FormItem>
                   <FormLabel>Username</FormLabel>
                   <FormControl>
-                    <Input placeholder="User" {...field} autoComplete="off" />
+                    <Input id='username-input' placeholder="User" {...field} autoComplete="off" />
                   </FormControl>
                   <FormDescription>
-                    This is your public display name.
+                    This is your username that will be used to identify you in the chat.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button type="submit" className='cursor-pointer'>Continue</Button>
+            <Button id='continue-button' type="submit" className='cursor-pointer'>Continue</Button>
           </form>
         </Form>
       </CardContent>

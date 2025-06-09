@@ -12,6 +12,7 @@ dependencies = [
     "psycopg>=3.2.9",
     "pytest>=8.4.0",
     "ruff>=0.11.13",
+    "selenium>=4.33.0",
     "ulid-py>=1.1.0",
 ]
 
@@ -20,3 +21,6 @@ pythonpath = [
     "."
 ]
 testpaths = ["tests"]
+markers = [
+    "selenium: marks tests that use selenium for browser automation"
+]
