@@ -1,3 +1,13 @@
+
+### Requirements
+
+
+### Quickstart
+1. 
+```bash
+cp .env.example .env
+cp .env.example frontend/.env
+```
 ### LLM Model: Qwen2.5-coder
 
 
