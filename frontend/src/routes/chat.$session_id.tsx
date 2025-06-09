@@ -76,9 +76,11 @@ function ThreadsSidebar() {
   return (
     <Sidebar className='dark:bg-neutral-950 bg-neutral-950 z-10 '>
 
-      <SidebarHeader className='px-4 pt-4 flex flex-row justify-center items-center font-bold'>
-        <img src="/logo.png" alt="Bard" className='size-5' height={512} width={512} />
-        <span>Bard</span>
+      <SidebarHeader className='pt-4' >
+        <Link to="/" className='px-4 gap-2 flex flex-row justify-center items-center font-bold'>
+          <img src="/logo.png" alt="Bard" className='size-5' height={512} width={512} />
+          <span>Bard</span>
+        </Link>
       </SidebarHeader>
 
 
