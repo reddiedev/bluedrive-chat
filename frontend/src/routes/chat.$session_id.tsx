@@ -201,6 +201,25 @@ function MessagesContainer({ messages }: { messages: MessageData[] }) {
   )
 }
 
+function LoadingContainer() {
+  return (
+    <div className='flex flex-col items-center justify-start grow pb-40 pt-10 gap-4'>
+      <div className='flex justify-end w-full'>
+        <Skeleton className='w-64 h-10' />
+      </div>
+      <div className='flex justify-start w-full'>
+        <Skeleton className='w-80 h-10' />
+      </div>
+      <div className='flex justify-end w-full'>
+        <Skeleton className='w-52 h-10' />
+      </div>
+      <div className='flex justify-start w-full'>
+        <Skeleton className='w-96 h-20' />
+      </div>
+    </div>
+  )
+}
+
 function ChatContainer({ open }: { open: boolean }) {
   const { username } = Route.useSearch()
   const { session_id } = Route.useParams()
@@ -214,10 +233,13 @@ function ChatContainer({ open }: { open: boolean }) {
 
   const [messages, setMessages] = useState<MessageData[]>([])
 
-  const { data: sessionData } = useQuery({
+  const { data: sessionData, isFetched: isSessionFetched } = useQuery({
     queryKey: ['session', session_id],
     queryFn: () => getSession({ data: session_id }),
+    initialData: { session: null, messages: [] },
   })
+
+  console.log("sessionData", sessionData)
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -353,13 +375,15 @@ function ChatContainer({ open }: { open: boolean }) {
   }, []);
 
 
-
+  console.log("isSessionFetched", isSessionFetched)
 
 
   return (
     <main ref={mainRef} className={cn('flex relative grow dark:bg-neutral-900 flex-col items-center justify-center rounded-lg transition-all duration-300 scrollbar scrollbar-track-neutral-900 scrollbar-thumb-neutral-500 ease-in-out overflow-y-scroll', open && "mt-4 ml-4")}>
       <div className="flex flex-col max-w-[50rem] w-[50rem] h-full">
-        {sessionData?.session == null && messages.length == 0 ? <NewThreadContainer /> : <MessagesContainer messages={messages} />}
+        {!isSessionFetched && <LoadingContainer />}
+        {isSessionFetched && sessionData.session == null && <NewThreadContainer />}
+        {isSessionFetched && sessionData.session && messages && <MessagesContainer messages={messages} />}
         <div className='fixed bottom-0 z-40 max-w-[50rem] w-full'>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleMessageSubmit)} className="flex flex-col space-y-8 w-full" >
