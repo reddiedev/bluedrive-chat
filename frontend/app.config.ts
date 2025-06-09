@@ -12,4 +12,19 @@ export default defineConfig({
       }),
     ],
   },
+  server: {
+    preset: 'node-server',
+  },
+  routers:{
+    client:{
+      vite:{
+        // @ts-ignore
+        server:{
+          hmr:{
+            port: 3124
+          }
+        }
+      }
+    }
+  }
 })

@@ -61,6 +61,21 @@ services:
         ipv4_address: ${BACKEND_IP:-172.28.0.20}
     depends_on:
       - db
+  frontend:
+    image: bd_frontend:latest
+    container_name: bd_frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    environment:
+      - VITE_BACKEND_BASE_URL=http://backend:8000
+    ports:
+      - "3000:3000"
+    networks:
+      bd_network:
+        ipv4_address: ${FRONTEND_IP:-172.28.0.40}
+    depends_on:
+      - backend
 
 volumes:
   bd_ollama_data:
