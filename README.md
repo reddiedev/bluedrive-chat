@@ -127,6 +127,13 @@ pnpm run start
 cd backend/tests
 pytest -v
 ```
+![Test](/media/tests.png)
 
 ## Acknowledgements
 This project was heavenly inspired by [open-webui](https://github.com/open-webui/open-webui) as well as [t3.chat](https://t3.chat/)
+
+## Troubleshooting
+For any `.env` problems, please `cd` your terminal into the root directory, then run this command to load the `.env` to your terminal
+```bash
+export $(grep -v '^#' .env | xargs)
+```
