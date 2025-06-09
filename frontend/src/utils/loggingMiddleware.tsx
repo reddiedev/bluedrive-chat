@@ -31,11 +31,11 @@ export const logMiddleware = createMiddleware()
     const res = await ctx.next()
 
     const now = new Date()
-    console.log('Client Req/Res:', {
+    /* console.log('Client Req/Res:', {
       duration: res.context.clientTime.getTime() - now.getTime(),
       durationToServer: res.context.durationToServer,
       durationFromServer: now.getTime() - res.context.serverTime.getTime(),
-    })
+    }) */
 
     return res
   })
