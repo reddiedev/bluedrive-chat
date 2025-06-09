@@ -33,7 +33,7 @@ def test_continue_without_username(driver):
     """Test that submitting the form without a username shows the correct error message."""
     expected_message = "String must contain at least 1 character(s)"
 
-    time.sleep(2)
+    time.sleep(1)
 
     # Click the continue button
     button = driver.find_element("id", "continue-button")
@@ -47,6 +47,30 @@ def test_continue_without_username(driver):
     # Assert the message matches the expected text
     assert message_element.text == expected_message, (
         f"Expected message '{expected_message}' but got '{message_element.text}'"
+    )
+
+
+@pytest.mark.selenium
+def test_continue_with_username(driver):
+    """Test that submitting the form with a username redirects to chat page."""
+    test_username = "testuser123"
+
+    time.sleep(1)  # Wait for page to load
+
+    # Find and fill the username input
+    username_input = driver.find_element("id", "username-input")
+    username_input.send_keys(test_username)
+
+    # Click the continue button
+    button = driver.find_element("id", "continue-button")
+    button.click()
+
+    # Wait for URL to change and contain /chat
+    WebDriverWait(driver, 5).until(lambda driver: "/chat" in driver.current_url)
+
+    # Verify the URL contains the expected pattern
+    assert "/chat" in driver.current_url, (
+        f"Expected URL to contain '/chat' but got '{driver.current_url}'"
     )
 
 
