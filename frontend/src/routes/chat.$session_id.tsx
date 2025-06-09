@@ -90,7 +90,7 @@ function ThreadsSidebar() {
 
 
       <div className='px-4 pt-2'>
-        <Button className='w-full cursor-pointer justify-center' onClick={async () => {
+        <Button id='new-thread-button' className='w-full cursor-pointer justify-center' onClick={async () => {
           const session_id = crypto.randomUUID()
           navigate({ to: '/chat/$session_id', params: { session_id }, search: { username } })
           await refetchSessions()
@@ -399,6 +399,7 @@ function ChatContainer({ open }: { open: boolean }) {
                         <FormItem>
                           <FormControl>
                             <Textarea
+                              id='message-input'
                               placeholder="Type your message..."
                               className="border-none p-2 scrollbar-none bg-transparent dark:bg-transparent not-[]: px-0 py-2  focus-visible:ring-0 resize-none"
                               onInput={adjustTextareaHeight}
@@ -440,7 +441,7 @@ function ChatContainer({ open }: { open: boolean }) {
                       )}
                     />
 
-                    <Button size="icon" type="submit" className='cursor-pointer'>
+                    <Button size="icon" id='send-message-button' type="submit" className='cursor-pointer'>
                       <ArrowUp />
                     </Button>
                   </div>
