@@ -81,7 +81,7 @@ export function MessageBox({ message }: { message: MessageData }) {
                         className={cn(
                           'hljs',
                           className,
-                          'bg-gray-100 dark:bg-gray-800 px-1 rounded text-xs'
+                          'bg-gray-100 dark:bg-gray-800 px-1 rounded text-xs  overflow-x-scroll scrollbar-thin'
                         )}
                       >
                         {children}
@@ -89,7 +89,7 @@ export function MessageBox({ message }: { message: MessageData }) {
                     ) : (
                       <code
                         {...props}
-                        className="bg-gray-100 dark:bg-gray-800 px-1 rounded text-xs"
+                        className="bg-gray-100 dark:bg-gray-800 px-1 rounded text-xs overflow-x-scroll scrollbar-thin"
                       >
                         {children}
                       </code>
