@@ -27,7 +27,6 @@ Project documentation is at
 ## Usage
 To use the application, 
 
-
 ## Getting Started
 > [!NOTE]
 > The project was develoepd and tested on a machine running Ubuntu 24.04 LTS with a x64 Ryzen 5 CPU, 16 GB RAM, and Nvidia GPU
@@ -123,3 +122,8 @@ pnpm run start
 ```
 
 #### Unit Tests
+> Please follow the same setup in [FastAPI Backend](#### FastAPI Backend)
+```bash
+cd backend/tests
+pytest -v
+```
