@@ -115,6 +115,9 @@ async def get_session(session_id: str):
     Returns:
         dict: A dictionary containing the session and its chat history.
     """
+    if not is_session_id_valid(session_id):
+        raise HTTPException(status_code=400, detail="Invalid session ID")
+
     with sync_connection.cursor() as cur:
         cur.execute(
             "SELECT id, username, title FROM db_sessions WHERE id = %s",
@@ -277,7 +280,9 @@ async def stream(request: ChatRequest, background_tasks: BackgroundTasks):
             full_response += token
             yield token
 
-    response = StreamingResponse(stream_response(), media_type="text/plain")
+    response = StreamingResponse(
+        stream_response(), media_type="text/plain; charset=utf-8"
+    )
 
     # STORE MESSAGES
     async def store_messages():
