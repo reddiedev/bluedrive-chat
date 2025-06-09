@@ -247,7 +247,6 @@ function ChatContainer({ open }: { open: boolean }) {
     initialData: { session: initialSession, messages: initialMessages },
   })
 
-
   // Scroll to bottom when messages change
   useEffect(() => {
     if (mainRef.current) {
@@ -458,7 +457,7 @@ function RouteComponent() {
   return (
     <SidebarProvider open={open} onOpenChange={setOpen}>
       <QueryClientProvider client={queryClient}>
-        <div className='bg-neutral-950 relative w-full font-display text-white h-screen max-h-screen overflow-hidden flex flex-row'>
+        <div className='bg-neutral-950 relative w-full font-display antialiased scroll-smooth text-white h-screen max-h-screen overflow-hidden flex flex-row'>
           <SidebarTrigger className='absolute top-3 left-4 z-40 bg-neutral-950 p-4 rounded-lg shadow-lg cursor-pointer' />
           <ThreadsSidebar />
           <ChatContainer open={open} />
