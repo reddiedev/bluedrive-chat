@@ -127,3 +127,6 @@ pnpm run start
 cd backend/tests
 pytest -v
 ```
+
+## Acknowledgements
+This project was heavenly inspired by [open-webui](https://github.com/open-webui/open-webui) as well as [t3.chat](https://t3.chat/)
