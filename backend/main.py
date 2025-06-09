@@ -93,6 +93,10 @@ def get_session_title(usr_msg: str, model: str) -> str:
 
 
 def get_ollama_models() -> list[dict]:
+    """
+    Retrieves the list of available models from the Ollama backend.
+    This function queries the Ollama API to check which models are available for chat completions and inferences.
+    """
     response = requests.get(
         f"{os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')}/api/tags"
     )
@@ -125,6 +129,16 @@ def create_db_sessions_table(conn: Connection):
 
 
 def get_session_by_id(conn: Connection, session_id: str) -> Session | None:
+    """
+    Retrieve a session from the database by its unique session ID.
+
+    Args:
+        conn (Connection): The active database connection.
+        session_id (str): The UUID of the session to retrieve.
+
+    Returns:
+        Session | None: The Session object if found, otherwise None.
+    """
     with conn.cursor() as cur:
         cur.execute(
             """
@@ -141,6 +155,15 @@ def get_session_by_id(conn: Connection, session_id: str) -> Session | None:
 def create_session_if_not_exists(
     conn: Connection, session_id: str, user_name: str, session_title: str
 ):
+    """
+    Create a new session in the database if it does not exist.
+
+    Args:
+        conn (Connection): The active database connection.
+        session_id (str): The UUID of the session to create.
+        user_name (str): The username of the user creating the session.
+        session_title (str): The title of the session.
+    """
     with conn.cursor() as cur:
         cur.execute(
             """
@@ -168,6 +191,10 @@ create_db_sessions_table(sync_connection)
 
 app = FastAPI()
 
+# For testing purposes, CORS middleware is configured to allow all origins.
+# This is convenient for local development and testing, but should be restricted
+# to specific origins in production for better security. Securing CORS is not
+# part of the current project scope.
 
 app.add_middleware(
     CORSMiddleware,
@@ -185,11 +212,27 @@ async def root():
 
 @app.get("/health")
 async def health():
+    """
+    Healthcheck endpoint for Docker and orchestration systems.
+
+    Returns a simple JSON response indicating the backend is running.
+    This endpoint is used by Docker, Kubernetes, or other orchestration tools
+    to verify that the FastAPI service is healthy and ready to receive traffic.
+
+    Returns:
+        dict: {"message": "OK!"}
+    """
     return {"message": "OK!"}
 
 
 @app.get("/models")
 async def get_models():
+    """
+    Retrieves the list of available models from the Ollama backend for use in the frontend
+
+    Returns:
+        list[dict]: A list of available model dictionaries.
+    """
     try:
         return get_ollama_models()
     except Exception as e:
@@ -199,6 +242,15 @@ async def get_models():
 
 @app.get("/sessions")
 async def get_sessions(name: str):
+    """
+    Retrieves the list of sessions for a given user from the database.
+
+    Args:
+        name (str): The username of the user to retrieve sessions for.
+
+    Returns:
+        list[Session]: A list of Session objects.
+    """
     formatted_name = unquote(name)
 
     try:
@@ -221,6 +273,15 @@ async def get_sessions(name: str):
 
 @app.get("/session")
 async def get_session(session_id: str):
+    """
+    Retrieves a specific session and its chat history from the database.
+
+    Args:
+        session_id (str): The UUID of the session to retrieve.
+
+    Returns:
+        dict: A dictionary containing the session and its chat history.
+    """
     with sync_connection.cursor() as cur:
         cur.execute(
             "SELECT id, username, title FROM db_sessions WHERE id = %s",
@@ -272,6 +333,16 @@ async def get_session(session_id: str):
 
 @app.post("/chat")
 async def chat(request: ChatRequest):
+    """
+    Handles a chat request by validating the session ID, model, and creating a new session if needed.
+    It then adds the user's message to the chat history and generates a response using the selected model.
+
+    Args:
+        request (ChatRequest): The chat request containing session ID, model, and content.
+
+    Returns:
+        JSONResponse: A JSON response containing the generated response.
+    """
     # INPUT VALIDATION
     if not is_session_id_valid(request.session_id):
         raise HTTPException(status_code=400, detail="Invalid session ID")
@@ -313,6 +384,17 @@ async def chat(request: ChatRequest):
 
 @app.post("/stream")
 async def stream(request: ChatRequest, background_tasks: BackgroundTasks):
+    """
+    Handles a streaming chat request by validating the session ID, model, and creating a new session if needed.
+    It then adds the user's message to the chat history and generates a response using the selected model.
+
+    Args:
+        request (ChatRequest): The chat request containing session ID, model, and content.
+        background_tasks (BackgroundTasks): The background tasks to handle the streaming response.
+
+    Returns:
+        StreamingResponse: A streaming response containing the generated response.
+    """
     print(f"Stream Chat Request: #{request.session_id} from @{request.name}")
 
     # INPUT VALIDATION
@@ -373,6 +455,11 @@ async def stream(request: ChatRequest, background_tasks: BackgroundTasks):
 
 
 def validate_env_vars():
+    """
+    Validates that all required environment variables are set.
+
+    Raises ValueError if any required environment variable is not set.
+    """
     if not os.getenv("OLLAMA_BASE_URL"):
         raise ValueError("OLLAMA_BASE_URL is not set")
     if not os.getenv("POSTGRES_HOST"):
