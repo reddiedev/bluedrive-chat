@@ -25,7 +25,11 @@ https://github.com/user-attachments/assets/a2ce244e-6ab7-42ed-9618-2f1a3f00534b
 Project documentation is at 
 
 ## Usage
-To use the application, 
+The application follows the typical workflow and user experience of most chat applications:
+- select your **Username**, as this is used to identify each user's sessions and chats
+- once on the chat screen, use the text input to send a message (you can shift + enter to create a new line, but clicking enter automatically sends the message!)
+- you can view your past and current thread on the sidebar on the left (you can ctrl/cmd + b on your keyboard to show/hide the sidebar at any time)
+
 
 ## Getting Started
 > [!NOTE]
@@ -121,7 +125,7 @@ pnpm run build
 pnpm run start
 ```
 
-#### Unit Tests
+#### Tests
 > Please follow the same setup in [FastAPI Backend](#fastapi-backend)
 ```bash
 cd backend/tests
