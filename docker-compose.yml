@@ -16,7 +16,7 @@ services:
     networks:
       bd_network:
         ipv4_address: "172.28.0.10"
-    deploy:
+    deploy: # If you do not have an Nvidia GPU, remove this section
       resources:
         reservations:
           devices:
