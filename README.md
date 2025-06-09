@@ -13,11 +13,19 @@ https://github.com/user-attachments/assets/a2ce244e-6ab7-42ed-9618-2f1a3f00534b
 - 🐳 **Fully Containerized** – Easy to setup and run with Docker Compose
 
 ## Tech Stack
+![Tech Stack](/media/stack.png?raw=true)
+
 - **Database**: Postgres (Dockerized)
 - **LLM**: Ollama (via LangChain)
 - **Backend**: FastAPI (Python)
 - **Frontend**: React (Vite, TanStack Start), TailwindCSS, Shadcn UI
 - **Deployment**: Docker & Docker Compose
+
+## Documentation
+Project documentation is at 
+
+## Usage
+To use the application, 
 
 
 ## Getting Started
@@ -53,6 +61,7 @@ docker compose up --build
 
 > [!CAUTION]
 > The first run will take some time, as the models are being downloaded for Ollama
+
 
 
 ### Building Locally
@@ -112,3 +121,5 @@ pnpm run dev
 pnpm run build
 pnpm run start
 ```
+
+## Documentation
