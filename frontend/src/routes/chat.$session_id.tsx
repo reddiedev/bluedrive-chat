@@ -348,71 +348,74 @@ function ChatContainer({ open }: { open: boolean }) {
 
 
   return (
-    <main ref={mainRef} className={cn('flex grow dark:bg-neutral-900 flex-col items-center justify-center rounded-lg transition-all duration-300 scrollbar scrollbar-track-neutral-900 scrollbar-thumb-neutral-500 ease-in-out overflow-y-scroll', open && "mt-4 ml-4")}>
+    <main ref={mainRef} className={cn('flex relative grow dark:bg-neutral-900 flex-col items-center justify-center rounded-lg transition-all duration-300 scrollbar scrollbar-track-neutral-900 scrollbar-thumb-neutral-500 ease-in-out overflow-y-scroll', open && "mt-4 ml-4")}>
       <div className="flex flex-col max-w-[50rem] w-[50rem] h-full">
         <MessagesContainer messages={messages} />
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleMessageSubmit)} className="flex flex-col space-y-8">
-            <div className="flex flex-row items-center gap-2 p-2 bg-neutral-950 rounded-xl rounded-b-none pb-0">
-              <div className="rounded-xl bg-neutral-900 w-full flex flex-col rounded-b-none pb-0">
-                <div className="p-2">
-                  <FormField
-                    control={form.control}
-                    name="content"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Type your message..."
-                            className="border-none p-2 scrollbar-none bg-neutral-900 px-0 py-2 dark:bg-neutral-900 dark:selection:bg-neutral-900 focus-visible:ring-0 resize-none"
-                            onInput={adjustTextareaHeight}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' && !e.shiftKey) {
-                                e.preventDefault();
-                                form.handleSubmit(handleMessageSubmit)();
-                              }
-                            }}
-                            rows={1}
-                            {...field}
-                            ref={textareaRef}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="p-2 pt-0 flex justify-between items-center">
-                  <FormField
-                    control={form.control}
-                    name="model"
-                    render={({ field }) => (
-                      <FormItem>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+        <div className='fixed bottom-0 z-40 max-w-[50rem] w-full'>
+
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleMessageSubmit)} className="flex flex-col space-y-8 w-full">
+              <div className="flex flex-row items-center gap-2 p-2 bg-neutral-950 rounded-xl rounded-b-none pb-0">
+                <div className="rounded-xl bg-neutral-900 w-full flex flex-col rounded-b-none pb-0">
+                  <div className="p-2">
+                    <FormField
+                      control={form.control}
+                      name="content"
+                      render={({ field }) => (
+                        <FormItem>
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a model" />
-                            </SelectTrigger>
+                            <Textarea
+                              placeholder="Type your message..."
+                              className="border-none p-2 scrollbar-none bg-neutral-900 px-0 py-2 dark:bg-neutral-900 dark:selection:bg-neutral-900 focus-visible:ring-0 resize-none"
+                              onInput={adjustTextareaHeight}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                  e.preventDefault();
+                                  form.handleSubmit(handleMessageSubmit)();
+                                }
+                              }}
+                              rows={1}
+                              {...field}
+                              ref={textareaRef}
+                            />
                           </FormControl>
-                          <SelectContent>
-                            {models.map((model) => (
-                              <SelectItem key={model.model} value={model.model}>{model.model}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="p-2 pt-0 flex justify-between items-center">
+                    <FormField
+                      control={form.control}
+                      name="model"
+                      render={({ field }) => (
+                        <FormItem>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a model" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {models.map((model) => (
+                                <SelectItem key={model.model} value={model.model}>{model.model}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
 
-                      </FormItem>
-                    )}
-                  />
+                        </FormItem>
+                      )}
+                    />
 
-                  <Button size="icon" type="submit" className='cursor-pointer'>
-                    <ArrowUp />
-                  </Button>
+                    <Button size="icon" type="submit" className='cursor-pointer'>
+                      <ArrowUp />
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
 
-          </form>
-        </Form>
+            </form>
+          </Form>
+        </div>
       </div>
     </main>
   )
