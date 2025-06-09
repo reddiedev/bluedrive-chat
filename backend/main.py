@@ -9,10 +9,11 @@ import psycopg
 from psycopg import Connection
 import os
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, JSONResponse
 from urllib.parse import unquote
 from lib.utils import generate_message_id, is_session_id_valid
 from lib.types import ChatRequest, Session, MessageRecord, Message
+import requests
 
 load_dotenv(override=True)
 
@@ -23,7 +24,7 @@ system_prompt = (
 sys_msg = SystemMessage(content=system_prompt)
 
 
-def get_session_title(usr_msg: str) -> str:
+def get_session_title(usr_msg: str, model: str) -> str:
     sys_msg = SystemMessage(
         content="""
         You are Qwen, created by Alibaba Cloud. You are a helpful assistant. You are tasked to generate a chat session title based on the user's first message. Follow these exact rules:
@@ -70,12 +71,20 @@ def get_session_title(usr_msg: str) -> str:
     )
     prompt = ChatPromptTemplate.from_messages([sys_msg, HumanMessage(content=usr_msg)])
     model = OllamaLLM(
-        model=os.getenv("OLLAMA_MODEL"),
+        model=model,
         base_url=os.getenv("OLLAMA_BASE_URL"),
     )
     chain = prompt | model
     response = chain.invoke({"content": usr_msg})
     return response
+
+
+def get_ollama_models() -> list[str]:
+    response = requests.get(
+        f"{os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')}/api/tags"
+    )
+    models = response.json()["models"]
+    return models
 
 
 ## LLM END
@@ -128,8 +137,8 @@ def create_session_if_not_exists(
 
 table_name = "bd_chat_history"
 CONNECTION_STRING = (
-    f"postgresql://{os.getenv('POSTGRES_USER')}:{os.getenv('POSTGRES_PASSWORD')}@{os.getenv('POSTGRES_HOST')}"
-    f":{os.getenv('POSTGRES_PORT')}/{os.getenv('POSTGRES_DB')}"
+    f"postgresql://{os.getenv('POSTGRES_USER', 'myuser')}:{os.getenv('POSTGRES_PASSWORD', 'mypassword')}@{os.getenv('POSTGRES_HOST', 'localhost')}"
+    f":{os.getenv('POSTGRES_PORT', 5432)}/{os.getenv('POSTGRES_DB', 'mydatabase')}"
 )
 sync_connection = psycopg.connect(CONNECTION_STRING)
 PostgresChatMessageHistory.create_tables(sync_connection, table_name)
@@ -235,54 +244,60 @@ async def get_session(session_id: str):
 
 @app.post("/chat")
 async def chat(request: ChatRequest):
+    # INPUT VALIDATION
     if not is_session_id_valid(request.session_id):
         raise HTTPException(status_code=400, detail="Invalid session ID")
 
-    session = get_session_by_id(sync_connection, request.session_id)
+    if request.model not in get_ollama_models():
+        raise HTTPException(status_code=400, detail="Invalid model")
 
+    # SESSION HANDLING
+    session = get_session_by_id(sync_connection, request.session_id)
     if not session:
-        title = get_session_title(request.content)
+        title = get_session_title(request.content, request.model)
         session = Session(id=request.session_id, title=title, username=request.name)
         create_session_if_not_exists(
             sync_connection, request.session_id, request.name, title
         )
-
     chat_history = PostgresChatMessageHistory(
         table_name, request.session_id, sync_connection=sync_connection
     )
     prev_messages = chat_history.get_messages()
 
+    # CHAT COMPLETION
     new_usr_msg = HumanMessage(
         content=request.content, id=generate_message_id(), name=request.name
     )
     prompt = ChatPromptTemplate.from_messages([sys_msg] + prev_messages + [new_usr_msg])
     model = OllamaLLM(
-        model=os.getenv("OLLAMA_MODEL"),
+        model=request.model,
         base_url=os.getenv("OLLAMA_BASE_URL"),
     )
     chain = prompt | model
-
     response = chain.invoke({"content": request.content})
     new_ai_msg = AIMessage(content=response, id=generate_message_id(), name="Assistant")
 
+    # STORE MESSAGES
     chat_history.add_messages([new_usr_msg, new_ai_msg])
 
-    return {
-        "message": response,
-        "session": session,
-        "messages": chat_history.get_messages(),
-    }
+    return JSONResponse(content={"message": response})
 
 
 @app.post("/stream")
 async def stream(request: ChatRequest, background_tasks: BackgroundTasks):
     print(f"Stream Chat Request: #{request.session_id} from @{request.name}")
+
+    # INPUT VALIDATION
     if not is_session_id_valid(request.session_id):
         raise HTTPException(status_code=400, detail="Invalid session ID")
 
+    if request.model not in get_ollama_models():
+        raise HTTPException(status_code=400, detail="Invalid model")
+
+    # SESSION HANDLING
     session = get_session_by_id(sync_connection, request.session_id)
     if not session:
-        title = get_session_title(request.content)
+        title = get_session_title(request.content, request.model)
         session = Session(id=request.session_id, title=title, username=request.name)
         create_session_if_not_exists(
             sync_connection, request.session_id, request.name, title
@@ -293,13 +308,11 @@ async def stream(request: ChatRequest, background_tasks: BackgroundTasks):
     )
     prev_messages = chat_history.get_messages()
 
-    print(f"Previous Messages: {prev_messages}")
-
+    # CHAT COMPLETION
     new_usr_msg = HumanMessage(
         content=request.content, id=generate_message_id(), name=request.name
     )
 
-    prompt = ChatPromptTemplate.from_messages([sys_msg] + prev_messages + [new_usr_msg])
     prompt = "\n".join(
         [sys_msg.content]
         + [msg.content for msg in prev_messages]
@@ -307,12 +320,12 @@ async def stream(request: ChatRequest, background_tasks: BackgroundTasks):
     )
 
     model_with_streaming = OllamaLLM(
-        model=os.getenv("OLLAMA_MODEL"),
+        model=request.model,
         base_url=os.getenv("OLLAMA_BASE_URL"),
         streaming=True,
     )
 
-    # Initialize variable to collect tokens
+    # RESPONSE STREAMING
     full_response = ""
 
     async def stream_response():
@@ -321,10 +334,9 @@ async def stream(request: ChatRequest, background_tasks: BackgroundTasks):
             full_response += token
             yield token
 
-    # Create streaming response
     response = StreamingResponse(stream_response(), media_type="text/plain")
 
-    # Add background task to store messages after streaming is complete
+    # STORE MESSAGES
     async def store_messages():
         new_ai_msg = AIMessage(
             content=full_response, id=generate_message_id(), name="Assistant"
@@ -337,7 +349,9 @@ async def stream(request: ChatRequest, background_tasks: BackgroundTasks):
 
 
 def main():
-    uvicorn.run("main:app", host="0.0.0.0", port=os.getenv("PORT", 8000), reload=True)
+    uvicorn.run(
+        "main:app", host="0.0.0.0", port=os.getenv("BACKEND_PORT", 8000), reload=True
+    )
 
 
 if __name__ == "__main__":
