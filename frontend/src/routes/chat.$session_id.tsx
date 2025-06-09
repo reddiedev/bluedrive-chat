@@ -31,10 +31,14 @@ export const Route = createFileRoute('/chat/$session_id')({
       username: (search.username as string) || 'User',
     }
   },
-  beforeLoad: async () => {
+  beforeLoad: async ({ params }) => {
     const models = await getModels()
+    const session_id = params.session_id
+    const sessionData = await getSession({ data: session_id })
     return {
       models: models,
+      session: sessionData.session,
+      messages: sessionData.messages,
     }
   },
   loader: async ({ params, context }) => {
@@ -44,6 +48,8 @@ export const Route = createFileRoute('/chat/$session_id')({
     return {
       session_id: session_id,
       models: models,
+      session: context.session,
+      messages: context.messages,
     }
   },
   component: RouteComponent,
@@ -226,6 +232,8 @@ function ChatContainer({ open }: { open: boolean }) {
   const { models } = Route.useLoaderData()
   const mainRef = useRef<HTMLDivElement>(null)
 
+  const { session: initialSession, messages: initialMessages } = Route.useLoaderData()
+
   const newMessageSchema = z.object({
     content: z.string().min(1),
     model: z.string().min(1),
@@ -236,10 +244,9 @@ function ChatContainer({ open }: { open: boolean }) {
   const { data: sessionData, isFetched: isSessionFetched } = useQuery({
     queryKey: ['session', session_id],
     queryFn: () => getSession({ data: session_id }),
-    initialData: { session: null, messages: [] },
+    initialData: { session: initialSession, messages: initialMessages },
   })
 
-  console.log("sessionData", sessionData)
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -337,12 +344,10 @@ function ChatContainer({ open }: { open: boolean }) {
       }
 
       if (messages.length === 0) {
-        console.log("init invalidating sessions")
         setTimeout(async () => {
-          console.log("started invalidating sessions")
           await queryClient.invalidateQueries({ queryKey: ['sessions'] })
-          console.log("invalidated sessions")
-        }, 4 * 1000)
+
+        }, 2 * 1000)
       }
     } catch (error) {
       console.error('Error:', error)
@@ -374,16 +379,11 @@ function ChatContainer({ open }: { open: boolean }) {
     adjustTextareaHeight();
   }, []);
 
-
-  console.log("isSessionFetched", isSessionFetched)
-
-
   return (
     <main ref={mainRef} className={cn('flex relative grow dark:bg-neutral-900 flex-col items-center justify-center rounded-lg transition-all duration-300 scrollbar scrollbar-track-neutral-900 scrollbar-thumb-neutral-500 ease-in-out overflow-y-scroll', open && "mt-4 ml-4")}>
       <div className="flex flex-col max-w-[50rem] w-[50rem] h-full">
-        {!isSessionFetched && <LoadingContainer />}
-        {isSessionFetched && sessionData.session == null && <NewThreadContainer />}
-        {isSessionFetched && sessionData.session && messages && <MessagesContainer messages={messages} />}
+        {isSessionFetched && messages.length == 0 && <NewThreadContainer />}
+        {isSessionFetched && messages.length > 0 && <MessagesContainer messages={messages} />}
         <div className='fixed bottom-0 z-40 max-w-[50rem] w-full'>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleMessageSubmit)} className="flex flex-col space-y-8 w-full" >
