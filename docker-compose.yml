@@ -70,8 +70,6 @@ services:
   frontend:
     image: bd_frontend:latest
     container_name: bd_frontend
-    env_file:
-      - frontend/.env.docker
     build:
       context: ./frontend
       dockerfile: Dockerfile

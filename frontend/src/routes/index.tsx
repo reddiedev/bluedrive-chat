@@ -28,7 +28,6 @@ function UsernameForm() {
     // generate uuid v4 
     const { username } = values
     const session_id = crypto.randomUUID()
-    console.log(session_id, username)
     navigate({ to: '/chat/$session_id', params: { session_id }, search: { username } })
   }
 

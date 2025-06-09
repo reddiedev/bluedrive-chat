@@ -1,7 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
 import { createFileRoute, Link, useNavigate, } from '@tanstack/react-router'
-import axios, { AxiosResponse } from 'axios'
 import { ArrowUp, BookOpenIcon, Code2Icon, MessageCircleIcon, NewspaperIcon, SearchIcon, StarsIcon } from 'lucide-react'
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -269,9 +268,14 @@ function ChatContainer({ open }: { open: boolean }) {
     resolver: zodResolver(newMessageSchema),
     defaultValues: {
       content: "",
-      model: models[0].model,
+      model: models.length > 0 ? models[0].model : "qwen2.5-coder:1.5b",
     },
   })
+
+  // get streaming response from backend 
+
+  const STREAMING_URL = `${import.meta.env.VITE_BACKEND_BASE_URL}/stream`
+
 
   async function handleMessageSubmit(values: z.infer<typeof newMessageSchema>) {
     form.reset()
@@ -296,11 +300,10 @@ function ChatContainer({ open }: { open: boolean }) {
       created_at: new Date().toISOString()
     }])
 
-    // get streaming response from backend 
-    const url = `${import.meta.env.VITE_BACKEND_BASE_URL}/stream`
+
 
     try {
-      const response = await fetch(url, {
+      const response = await fetch(STREAMING_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
