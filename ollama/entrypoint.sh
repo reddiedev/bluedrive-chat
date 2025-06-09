@@ -12,7 +12,7 @@ done
 echo "Ollama server is ready!"
 
 # Pull models if they don't exist
-MODELS=("qwen2.5-coder:1.5b")
+MODELS=("qwen2.5-coder:1.5b" "gemma3:1b" "llama3.2:1b")
 
 for model in "${MODELS[@]}"; do
   echo "Checking if model $model exists..."
@@ -25,6 +25,12 @@ for model in "${MODELS[@]}"; do
 done
 
 echo "All models are ready!"
+
+# Preload gemma into the GPU memory
+curl http://localhost:11434/api/generate -d '{
+  "model": "gemma3:1b",
+  "prompt": ""
+}'
 
 # Keep the container running
 wait
