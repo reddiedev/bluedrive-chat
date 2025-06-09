@@ -10,6 +10,13 @@ dependencies = [
     "langchain-ollama>=0.3.3",
     "langchain-postgres>=0.0.14",
     "psycopg>=3.2.9",
+    "pytest>=8.4.0",
     "ruff>=0.11.13",
     "ulid-py>=1.1.0",
 ]
+
+[tool.pytest.ini_options]
+pythonpath = [
+    "."
+]
+testpaths = ["tests"]

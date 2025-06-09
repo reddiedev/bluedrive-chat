@@ -1,8 +1,9 @@
 import ulid
 import uuid
+from typing import Any
 
 
-def is_session_id_valid(session_id: str) -> bool:
+def is_session_id_valid(session_id: Any) -> bool:
     """
     Validates if a session ID is a valid UUID.
 
@@ -12,9 +13,13 @@ def is_session_id_valid(session_id: str) -> bool:
     Returns:
         bool: True if the session ID is a valid UUID, False otherwise.
     """
+    if not isinstance(session_id, str):
+        return False
+
     try:
-        uuid.UUID(session_id)
-        return True
+        val = uuid.UUID(session_id)
+        # Optional: Ensure the string is in canonical form
+        return str(val) == session_id.lower()
     except ValueError:
         return False
 
