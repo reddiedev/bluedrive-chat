@@ -211,7 +211,6 @@ function ChatContainer({ open }: { open: boolean }) {
     form.reset()
     const { content } = values
 
-
     // render latest message
     setMessages(prevMessages => [...prevMessages, {
       id: crypto.randomUUID(),
@@ -221,32 +220,75 @@ function ChatContainer({ open }: { open: boolean }) {
       created_at: new Date().toISOString()
     }])
 
-    // get response from backend 
-    const url = `${import.meta.env.VITE_BACKEND_BASE_URL}/chat`
-
-    const response: AxiosResponse<ChatResponse> = await axios.post(url, {
-      name: username,
-      session_id: session_id,
-      content: content
-    })
-
-
+    // Create a temporary message for the assistant's response
+    const tempMessageId = crypto.randomUUID()
     setMessages(prevMessages => [...prevMessages, {
-      id: crypto.randomUUID(),
+      id: tempMessageId,
       role: "assistant",
-      content: response.data.message,
-      name: response.data.session.username,
+      content: "",
+      name: "Assistant",
       created_at: new Date().toISOString()
     }])
 
+    // get streaming response from backend 
+    const url = `${import.meta.env.VITE_BACKEND_BASE_URL}/stream`
 
-    if (messages.length == 0) {
-      console.log("init invalidating sessions")
-      setTimeout(async () => {
-        console.log("started invalidating sessions")
-        await queryClient.invalidateQueries({ queryKey: ['sessions'] })
-        console.log("invalidated sessions")
-      }, 4 * 1000)
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: username,
+          session_id: session_id,
+          content: content
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok')
+      }
+
+      const reader = response.body?.getReader()
+      if (!reader) {
+        throw new Error('No reader available')
+      }
+
+      let accumulatedContent = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        // Convert the Uint8Array to text
+        const chunk = new TextDecoder().decode(value)
+        accumulatedContent += chunk
+
+        // Update the message with accumulated content
+        setMessages(prevMessages =>
+          prevMessages.map(msg =>
+            msg.id === tempMessageId
+              ? { ...msg, content: accumulatedContent }
+              : msg
+          )
+        )
+      }
+
+      if (messages.length === 0) {
+        console.log("init invalidating sessions")
+        setTimeout(async () => {
+          console.log("started invalidating sessions")
+          await queryClient.invalidateQueries({ queryKey: ['sessions'] })
+          console.log("invalidated sessions")
+        }, 4 * 1000)
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      // Remove the temporary message on error
+      setMessages(prevMessages =>
+        prevMessages.filter(msg => msg.id !== tempMessageId)
+      )
     }
   }
 

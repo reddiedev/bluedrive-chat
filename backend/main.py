@@ -1,11 +1,10 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, BackgroundTasks
 import uvicorn
 from dotenv import load_dotenv
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langchain_ollama.llms import OllamaLLM
 from langchain_postgres import PostgresChatMessageHistory
-from langchain_core.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 import psycopg
 from psycopg import Connection
 import os
@@ -14,7 +13,6 @@ from fastapi.responses import StreamingResponse
 from urllib.parse import unquote
 from lib.utils import generate_message_id, is_session_id_valid
 from lib.types import ChatRequest, Session, MessageRecord, Message
-
 
 load_dotenv(override=True)
 
@@ -41,7 +39,8 @@ def get_session_title(usr_msg: str) -> str:
         5. Do NOT use only emojis, random words, or generic words like "Title" or "Chat".
         6. Use the same language as the user's message.
         7. Make it concise, specific, and engaging.
-        8. Do not use quotes, explanations, or extra text.
+        8. Do not use quotes, explanations, or extra text
+        9. The title must not exceed 100 characters
         
         Common topic emojis to use:
         - 💻 for coding/programming
@@ -169,16 +168,22 @@ async def health():
 async def get_sessions(name: str):
     formatted_name = unquote(name)
 
-    with sync_connection.cursor() as cur:
-        cur.execute(
-            "SELECT id, username, title FROM db_sessions WHERE username = %s ORDER BY created_at DESC",
-            (formatted_name,),
-        )
-        result = cur.fetchall()
+    try:
+        with sync_connection.cursor() as cur:
+            cur.execute(
+                "SELECT id, username, title FROM db_sessions WHERE username = %s ORDER BY created_at DESC",
+                (formatted_name,),
+            )
+            result = cur.fetchall()
+            sync_connection.commit()  # Explicitly commit the transaction
 
-        return [
-            Session(id=str(row[0]), title=row[2], username=row[1]) for row in result
-        ]
+            return [
+                Session(id=str(row[0]), title=row[2], username=row[1]) for row in result
+            ]
+    except Exception as e:
+        sync_connection.rollback()  # Rollback on error
+        print(f"Database error in get_sessions: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @app.get("/session")
@@ -270,7 +275,8 @@ async def chat(request: ChatRequest):
 
 
 @app.post("/stream")
-async def stream(request: ChatRequest):
+async def stream(request: ChatRequest, background_tasks: BackgroundTasks):
+    print(f"Stream Chat Request: #{request.session_id} from @{request.name}")
     if not is_session_id_valid(request.session_id):
         raise HTTPException(status_code=400, detail="Invalid session ID")
 
@@ -287,25 +293,47 @@ async def stream(request: ChatRequest):
     )
     prev_messages = chat_history.get_messages()
 
+    print(f"Previous Messages: {prev_messages}")
+
     new_usr_msg = HumanMessage(
         content=request.content, id=generate_message_id(), name=request.name
     )
-    prompt = ChatPromptTemplate.from_messages([sys_msg] + prev_messages + [new_usr_msg])
 
-    handler = StreamingStdOutCallbackHandler()
+    prompt = ChatPromptTemplate.from_messages([sys_msg] + prev_messages + [new_usr_msg])
+    prompt = "\n".join(
+        [sys_msg.content]
+        + [msg.content for msg in prev_messages]
+        + [new_usr_msg.content]
+    )
 
     model_with_streaming = OllamaLLM(
         model=os.getenv("OLLAMA_MODEL"),
         base_url=os.getenv("OLLAMA_BASE_URL"),
         streaming=True,
-        callbacks=[handler],
     )
 
-    chain = prompt | model_with_streaming
+    # Initialize variable to collect tokens
+    full_response = ""
 
-    response = chain.stream({"content": request.content})
+    async def stream_response():
+        nonlocal full_response
+        async for token in model_with_streaming.astream(prompt):
+            full_response += token
+            yield token
 
-    return StreamingResponse(response, media_type="text/plain")
+    # Create streaming response
+    response = StreamingResponse(stream_response(), media_type="text/plain")
+
+    # Add background task to store messages after streaming is complete
+    async def store_messages():
+        new_ai_msg = AIMessage(
+            content=full_response, id=generate_message_id(), name="Assistant"
+        )
+        chat_history.add_messages([new_usr_msg, new_ai_msg])
+
+    background_tasks.add_task(store_messages)
+
+    return response
 
 
 def main():
