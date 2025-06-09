@@ -21,10 +21,6 @@ system_prompt = (
     """You are Qwen, created by Alibaba Cloud. You are a helpful assistant."""
 )
 sys_msg = SystemMessage(content=system_prompt)
-model = OllamaLLM(
-    model=os.getenv("OLLAMA_MODEL"),
-    base_url=os.getenv("OLLAMA_BASE_URL"),
-)
 
 
 def get_session_title(usr_msg: str) -> str:
@@ -73,6 +69,10 @@ def get_session_title(usr_msg: str) -> str:
         """
     )
     prompt = ChatPromptTemplate.from_messages([sys_msg, HumanMessage(content=usr_msg)])
+    model = OllamaLLM(
+        model=os.getenv("OLLAMA_MODEL"),
+        base_url=os.getenv("OLLAMA_BASE_URL"),
+    )
     chain = prompt | model
     response = chain.invoke({"content": usr_msg})
     return response
@@ -260,6 +260,10 @@ async def chat(request: ChatRequest):
         content=request.content, id=generate_message_id(), name=request.name
     )
     prompt = ChatPromptTemplate.from_messages([sys_msg] + prev_messages + [new_usr_msg])
+    model = OllamaLLM(
+        model=os.getenv("OLLAMA_MODEL"),
+        base_url=os.getenv("OLLAMA_BASE_URL"),
+    )
     chain = prompt | model
 
     response = chain.invoke({"content": request.content})
