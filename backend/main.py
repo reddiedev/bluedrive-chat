@@ -15,7 +15,7 @@ from lib.utils import generate_message_id, is_session_id_valid
 from lib.types import ChatRequest, Session, MessageRecord, Message
 import requests
 
-load_dotenv(override=True)
+load_dotenv()
 
 ## LLM START
 system_prompt = """
@@ -156,6 +156,7 @@ CONNECTION_STRING = (
     f"postgresql://{os.getenv('POSTGRES_USER', 'myuser')}:{os.getenv('POSTGRES_PASSWORD', 'mypassword')}@{os.getenv('POSTGRES_HOST', 'localhost')}"
     f":{os.getenv('POSTGRES_PORT', 5432)}/{os.getenv('POSTGRES_DB', 'mydatabase')}"
 )
+print(f"CONNECTION_STRING: {CONNECTION_STRING}")
 sync_connection = psycopg.connect(CONNECTION_STRING)
 PostgresChatMessageHistory.create_tables(sync_connection, table_name)
 create_db_sessions_table(sync_connection)
@@ -387,7 +388,7 @@ def validate_env_vars():
 
 def main():
     validate_env_vars()
-    load_dotenv(override=True)
+    load_dotenv()
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
