@@ -333,11 +333,7 @@ async def stream(request: ChatRequest, background_tasks: BackgroundTasks):
         content=request.content, id=generate_message_id(), name=request.name
     )
 
-    prompt = "\n".join(
-        [sys_msg.content]
-        + [msg.content for msg in prev_messages]
-        + [new_usr_msg.content]
-    )
+    messages = [SystemMessage(content=sys_msg.content)] + prev_messages + [new_usr_msg]
 
     model_with_streaming = OllamaLLM(
         model=request.model,
@@ -350,7 +346,7 @@ async def stream(request: ChatRequest, background_tasks: BackgroundTasks):
 
     async def stream_response():
         nonlocal full_response
-        async for token in model_with_streaming.astream(prompt):
+        async for token in model_with_streaming.astream(messages):
             full_response += token
             yield token
 
