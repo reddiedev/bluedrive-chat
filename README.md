@@ -122,7 +122,7 @@ pnpm run start
 ```
 
 #### Unit Tests
-> Please follow the same setup in [FastAPI Backend](#### FastAPI Backend)
+> Please follow the same setup in [FastAPI Backend](#fastapi-backend)
 ```bash
 cd backend/tests
 pytest -v
