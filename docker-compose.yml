@@ -15,7 +15,7 @@ services:
     restart: unless-stopped
     networks:
       bd_network:
-        ipv4_address: ${OLLAMA_IP_ADDRESS:-172.28.0.10}
+        ipv4_address: "172.28.0.10"
     deploy:
       resources:
         reservations:
@@ -32,6 +32,7 @@ services:
   db:
     image: postgres:16
     restart: always
+    container_name: bd_database
     ports:
       - "${POSTGRES_PORT}:5432"
     environment:
@@ -40,7 +41,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     networks:
       bd_network:
-        ipv4_address: ${DB_IP:-172.28.0.30}
+        ipv4_address: "172.28.0.30"
     volumes:
       - bd_pgdata:/var/lib/postgresql/data
       - ./database/seed.sql:/docker-entrypoint-initdb.d/seed.sql
@@ -58,7 +59,7 @@ services:
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434}
     networks:
       bd_network:
-        ipv4_address: ${BACKEND_IP:-172.28.0.20}
+        ipv4_address: "172.28.0.20"
     depends_on:
       - db
   frontend:
@@ -69,11 +70,12 @@ services:
       dockerfile: Dockerfile
     environment:
       - VITE_BACKEND_BASE_URL=http://backend:8000
+      - VITE_OLLAMA_BASE_URL=http://ollama:11434
     ports:
       - "3000:3000"
     networks:
       bd_network:
-        ipv4_address: ${FRONTEND_IP:-172.28.0.40}
+        ipv4_address: "172.28.0.40"
     depends_on:
       - backend
 
