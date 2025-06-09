@@ -1,7 +1,11 @@
 # Bard
 __Bard__ is an offline, full-stack AI chatbot application designed as a showcase for AI engineering skills. It demonstrates the integration of a __local__ Large Language Model (LLM) with a modern web frontend, robust backend, and _persistent_ chat memory, all orchestrated with best practices in software engineering.
 
+![Banner](/media/banner.png?raw=true)
+
 ## **Features**
+![Demo](/media/demo.mp4)
+
 - 💻 **Modern Frontend** – Built with React (Vite), TanStack Start, TailwindCSS, and Shadcn UI.
 - 🔒 **Offline** – Secure and Local LLM via Ollama
 - 💾 **Persistent Chat** – Session Handling and Conversation History via langchain-postgres
@@ -18,14 +22,14 @@ __Bard__ is an offline, full-stack AI chatbot application designed as a showcase
 
 ## Getting Started
 > [!NOTE]
-> Project was tested on Ubuntu 24.04 LTS with a x64 CPU, and Nvidia GPU
+> The project was develoepd and tested on a machine running Ubuntu 24.04 LTS with a x64 Ryzen 5 CPU, 16 GB RAM, and Nvidia GPU
 
 ### Requirements
 
-- Docker 
-- Docker Container Toolkit
-- Python 3.12
-- Node.js 20
+- [Docker](https://docs.docker.com/engine/install/ubuntu/) 
+- [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
+- [Python](https://www.python.org/)
+- [Node.js](https://nodejs.org/en)
 
 > [!Important]
 > Please modify the `ollama` service in `docker-compose.yml` if you do not have an Nvidia gpu
@@ -84,10 +88,10 @@ python3 main.py
 1. Install `Node.js v20` and [pnpm](https://pnpm.io/) on your Local machine
 ```bash
 node -v
-npm install -g pnpm
-
-pnpm setup # if you haven't used pnpm before
 >>> v20.18.0
+
+npm install -g pnpm
+pnpm setup # if you haven't used pnpm before
 ```
 For managing Node environments, I prefer to use it via [nvm](https://github.com/nvm-sh/nvm)
 ```bash
