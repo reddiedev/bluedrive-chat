@@ -1,42 +1,79 @@
-from lib.utils import is_session_id_valid
+from lib.database import (
+    get_db_connection,
+)
 
 
-def test_valid_uuid():
-    """Test that valid UUIDs are accepted."""
-    valid_uuids = [
-        "123e4567-e89b-12d3-a456-426614174000",
-        "00000000-0000-0000-0000-000000000000",
-        "ffffffff-ffff-ffff-ffff-ffffffffffff",
-        "550e8400-e29b-41d4-a716-446655440000",
-    ]
-
-    for uuid_str in valid_uuids:
-        assert is_session_id_valid(uuid_str) is True
+def test_database_connection():
+    """Test that we can connect to the database."""
+    conn = get_db_connection()
+    assert conn is not None
+    conn.close()
 
 
-def test_invalid_uuid():
-    """Test that invalid UUIDs are rejected."""
-    invalid_uuids = [
-        "not-a-uuid",
-        "123e4567-e89b-12d3-a456",  # Incomplete UUID
-        "123e4567-e89b-12d3-a456-426614174000-extra",  # Too long
-        "",  # Empty string
-        None,  # None value
-        "123e4567-e89b-12d3-a456-42661417400g",  # Invalid character
-        "123e4567-e89b-12d3-a456-42661417400",  # Missing character
-    ]
+def test_tables_exist():
+    """Test that both required tables exist."""
+    conn = get_db_connection()
+    with conn.cursor() as cur:
+        # Check db_sessions table
+        cur.execute("""
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_name = 'db_sessions'
+            );
+        """)
+        assert cur.fetchone()[0] is True
 
-    for uuid_str in invalid_uuids:
-        assert is_session_id_valid(uuid_str) is False
+        # Check bd_chat_history table
+        cur.execute("""
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_name = 'bd_chat_history'
+            );
+        """)
+        assert cur.fetchone()[0] is True
+    conn.close()
 
 
-def test_uuid_case_insensitive():
-    """Test that UUID validation is case insensitive."""
-    uuid_str = "123E4567-E89B-12D3-A456-426614174000"
-    assert is_session_id_valid(uuid_str) is True
+def test_seed_data_in_sessions():
+    """Test that seed data exists in db_sessions table."""
+    conn = get_db_connection()
+    with conn.cursor() as cur:
+        cur.execute("SELECT COUNT(*) FROM db_sessions")
+        count = cur.fetchone()[0]
+        assert count >= 10  # We know we have at least 10 seed records
+
+        # Check specific seed record
+        cur.execute("""
+            SELECT username, title 
+            FROM db_sessions 
+            WHERE id = '123e4567-e89b-12d3-a456-426614174000'
+        """)
+        result = cur.fetchone()
+        assert result is not None
+        assert result[0] == "John Doe"
+        assert result[1] == "🤖 Exploring AI and Machine Learning"
+    conn.close()
 
 
-def test_uuid_without_hyphens():
-    """Test that UUIDs without hyphens are rejected."""
-    uuid_str = "123e4567e89b12d3a456426614174000"
-    assert is_session_id_valid(uuid_str) is False
+def test_seed_data_in_chat_history():
+    """Test that seed data exists in bd_chat_history table."""
+    conn = get_db_connection()
+    with conn.cursor() as cur:
+        cur.execute("SELECT COUNT(*) FROM bd_chat_history")
+        count = cur.fetchone()[0]
+        assert count >= 6  # We know we have at least 6 seed records
+
+        # Check specific seed record
+        cur.execute("""
+            SELECT message 
+            FROM bd_chat_history 
+            WHERE session_id = '123e4567-e89b-12d3-a456-426614174000'
+            ORDER BY created_at
+            LIMIT 1
+        """)
+        result = cur.fetchone()
+        assert result is not None
+        message = result[0]
+        assert message["type"] == "human"
+        assert "Can you explain what machine learning is?" in message["data"]["content"]
+    conn.close()

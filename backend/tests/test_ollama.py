@@ -1,7 +1,6 @@
 import os
 import requests
 from lib.ollama import get_ollama_models_names
-import pytest
 
 ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 
