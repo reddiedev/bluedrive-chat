@@ -52,11 +52,11 @@ export const Route = createFileRoute('/chat/$session_id')({
 function ThreadsSidebar() {
   const { username } = Route.useSearch()
   const { session_id } = Route.useParams()
-  const { data: sessions } = useQuery({
+  const { data: sessions, refetch: refetchSessions, } = useQuery({
     queryKey: ['sessions', username],
     queryFn: () => getSessions({ data: { name: encodeURIComponent(username), session_id } }),
     initialData: [],
-    refetchInterval: 3 * 1000,
+    refetchInterval: 1 * 1000,
   })
   const navigate = useNavigate()
 
@@ -83,9 +83,10 @@ function ThreadsSidebar() {
 
 
       <div className='px-4 pt-2'>
-        <Button className='w-full cursor-pointer justify-center' onClick={() => {
+        <Button className='w-full cursor-pointer justify-center' onClick={async () => {
           const session_id = crypto.randomUUID()
           navigate({ to: '/chat/$session_id', params: { session_id }, search: { username } })
+          await refetchSessions()
         }}>
           <MessageCircleIcon />
           New Thread

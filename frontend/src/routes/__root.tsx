@@ -51,7 +51,10 @@ export const Route = createRootRoute({
     ],
     scripts: [
       { crossOrigin: 'anonymous', src: 'https://unpkg.com/react-scan/dist/auto.global.js' },
-      { src: "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" }
+      { src: "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js" },
+      { src: "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/python.min.js" },
+      { src: "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/javascript.min.js" },
+      { src: "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/typescript.min.js" }
     ]
   }),
   errorComponent: (props) => {

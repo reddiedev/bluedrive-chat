@@ -73,9 +73,28 @@ export function MessageBox({ message }: { message: MessageData }) {
                     </pre>
                   ),
                   // Custom styling for inline code
-                  code: ({ children, ...props }) => (
-                    <code {...props} className="bg-gray-100 dark:bg-gray-800 px-1 rounded text-xs">{children}</code>
-                  ),
+                  code: ({ children, className, ...props }: any) => {
+                    const match = /language-(\w+)/.exec(className || '')
+                    return match ? (
+                      <code
+                        {...props}
+                        className={cn(
+                          'hljs',
+                          className,
+                          'bg-gray-100 dark:bg-gray-800 px-1 rounded text-xs'
+                        )}
+                      >
+                        {children}
+                      </code>
+                    ) : (
+                      <code
+                        {...props}
+                        className="bg-gray-100 dark:bg-gray-800 px-1 rounded text-xs"
+                      >
+                        {children}
+                      </code>
+                    )
+                  },
                 }}
               >
                 {message.content}
