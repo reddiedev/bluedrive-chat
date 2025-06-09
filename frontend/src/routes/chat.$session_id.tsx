@@ -234,8 +234,12 @@ function ChatContainer({ open }: { open: boolean }) {
   const { session: initialSession, messages: initialMessages } = Route.useLoaderData()
 
   const newMessageSchema = z.object({
-    content: z.string().min(1).max(99999),
-    model: z.string().min(1).max(255),
+    content: z.string()
+      .min(1, "Message cannot be empty")
+      .max(99999, "Message is too long (maximum 99999 characters)"),
+    model: z.string()
+      .min(1, "Please select a model")
+      .max(255, "Model name is too long"),
   })
 
   const [messages, setMessages] = useState<MessageData[]>([])
@@ -300,8 +304,6 @@ function ChatContainer({ open }: { open: boolean }) {
       created_at: new Date().toISOString()
     }])
 
-
-
     try {
       const response = await fetch(STREAMING_URL, {
         method: 'POST',
@@ -317,7 +319,8 @@ function ChatContainer({ open }: { open: boolean }) {
       })
 
       if (!response.ok) {
-        throw new Error('Network response was not ok')
+        const errorData = await response.json()
+        throw new Error(errorData.detail || 'Failed to send message')
       }
 
       const reader = response.body?.getReader()
@@ -348,7 +351,6 @@ function ChatContainer({ open }: { open: boolean }) {
       if (messages.length === 0) {
         setTimeout(async () => {
           await queryClient.invalidateQueries({ queryKey: ['sessions'] })
-
         }, 2 * 1000)
       }
     } catch (error) {
@@ -357,6 +359,11 @@ function ChatContainer({ open }: { open: boolean }) {
       setMessages(prevMessages =>
         prevMessages.filter(msg => msg.id !== tempMessageId)
       )
+      // Add error message to the form
+      form.setError('content', {
+        type: 'manual',
+        message: error instanceof Error ? error.message : 'Failed to send message'
+      })
     }
   }
 
@@ -414,6 +421,7 @@ function ChatContainer({ open }: { open: boolean }) {
                               ref={textareaRef}
                             />
                           </FormControl>
+                          <FormMessage id='message-input-message' />
                         </FormItem>
                       )}
                     />
@@ -436,7 +444,7 @@ function ChatContainer({ open }: { open: boolean }) {
                               ))}
                             </SelectContent>
                           </Select>
-
+                          <FormMessage id='model-input-message' />
                         </FormItem>
                       )}
                     />

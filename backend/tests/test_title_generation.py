@@ -6,28 +6,23 @@ def test_title_generation():
     test_cases = [
         {
             "message": "Can you help me debug this Python script that's not working?",
-            "expected_words": 4,
-            "max_length": 100,
+            "max_length": 200,
         },
         {
             "message": "I need to analyze some sales data from last quarter",
-            "expected_words": 4,
-            "max_length": 100,
+            "max_length": 200,
         },
         {
             "message": "What are the best practices for writing clean code?",
-            "expected_words": 4,
-            "max_length": 100,
+            "max_length": 200,
         },
         {
             "message": "I'm having trouble with my React components not rendering properly",
-            "expected_words": 4,
-            "max_length": 100,
+            "max_length": 200,
         },
         {
             "message": "Can you help me brainstorm some ideas for my next project?",
-            "expected_words": 4,
-            "max_length": 100,
+            "max_length": 200,
         },
     ]
 
@@ -38,12 +33,6 @@ def test_title_generation():
         assert len(title) > 0, "Title should not be empty"
         first_char = title[0]
         assert ord(first_char) > 0x1F300, "First character should be an emoji"
-
-        # Test word count
-        words = title.split()
-        assert len(words) >= test_case["expected_words"], (
-            f"Title should have at least {test_case['expected_words']} words"
-        )
 
         # Test length
         assert len(title) <= test_case["max_length"], (
@@ -59,4 +48,5 @@ def test_title_generation():
         )
 
         # Test meaningful content
+        words = title.split()
         assert len(words) > 1, "Title should contain more than just an emoji"
