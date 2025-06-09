@@ -29,7 +29,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s 
-  db:
+  database:
     image: postgres:16
     restart: always
     container_name: bd_database
@@ -53,24 +53,32 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     ports:
-      - "8002:8000"
+      - "${BACKEND_PORT:-8000}:8000"
     environment:
-      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5-coder:1.5b}
-      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434}
+      - OLLAMA_BASE_URL=http://172.28.0.10:11434
+      - POSTGRES_HOST=172.28.0.30
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
     networks:
       bd_network:
         ipv4_address: "172.28.0.20"
     depends_on:
-      - db
+      - database
+      - ollama
   frontend:
     image: bd_frontend:latest
     container_name: bd_frontend
+    env_file:
+      - frontend/.env.docker
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - VITE_BACKEND_BASE_URL=http://172.28.0.20:8000
     environment:
-      - VITE_BACKEND_BASE_URL=http://backend:8000
-      - VITE_OLLAMA_BASE_URL=http://ollama:11434
+      - VITE_BACKEND_BASE_URL=http://172.28.0.20:8000
     ports:
       - "3000:3000"
     networks:
@@ -78,6 +86,8 @@ services:
         ipv4_address: "172.28.0.40"
     depends_on:
       - backend
+      - ollama
+      - database
 
 volumes:
   bd_ollama_data:

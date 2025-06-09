@@ -4,8 +4,21 @@ WORKDIR /app
 
 COPY package.json pnpm-lock.yaml* ./
 
-RUN corepack enable pnpm && pnpm i
+RUN npm install -g corepack@latest
+RUN corepack enable pnpm && corepack prepare pnpm@latest --activate && pnpm i --frozen-lockfile
 
 COPY . .
 
-CMD ["pnpm", "dev"]
+ARG VITE_BACKEND_BASE_URL
+ENV VITE_BACKEND_BASE_URL=${VITE_BACKEND_BASE_URL}
+
+RUN pnpm run build
+
+
+ENV NODE_ENV=production
+
+EXPOSE 3000
+
+ENV PORT=3000
+
+CMD ["node", "-r", "dotenv/config", ".output/server/index.mjs"]
