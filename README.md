@@ -4,7 +4,7 @@ __Bard__ is an offline, full-stack AI chatbot application designed as a showcase
 ![Banner](/media/banner.png?raw=true)
 
 ## **Features**
-![Demo](/media/demo.mp4)
+![Demo](https://cdn.reddie.dev/bard-demo.mp4)
 
 - 💻 **Modern Frontend** – Built with React (Vite), TanStack Start, TailwindCSS, and Shadcn UI.
 - 🔒 **Offline** – Secure and Local LLM via Ollama
