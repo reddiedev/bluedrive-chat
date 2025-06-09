@@ -5,197 +5,30 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langchain_ollama.llms import OllamaLLM
 from langchain_postgres import PostgresChatMessageHistory
-import psycopg
-from psycopg import Connection
 import os
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
 from urllib.parse import unquote
+
 from lib.utils import generate_message_id, is_session_id_valid
 from lib.types import ChatRequest, Session, MessageRecord, Message
-import requests
+from lib.ollama import get_ollama_models, get_ollama_models_names, get_session_title
+from lib.prompts import chat_sys_msg
+from lib.database import (
+    get_session_by_id,
+    create_session_if_not_exists,
+    sync_connection,
+    table_name,
+)
 
 load_dotenv()
-
-## LLM START
-system_prompt = """
-You are Bard, an intelligent chatbot designed to answer user questions accurately, clearly, and helpfully.
-
-Your task is to understand the user's question, select the most appropriate model for the task if needed, and provide a concise, relevant, and easy-to-understand response. Always ensure your answers are accurate, respectful, and helpful.
-
-If you are unsure about an answer, politely let the user know and suggest possible next steps or resources.
-
-When outputting anything in Markdown, especially code blocks, always specify the appropriate language after the opening triple backticks (e.g., ```python, ```javascript, ```bash, etc.) so that syntax highlighting can be applied correctly.
-"""
-sys_msg = SystemMessage(content=system_prompt)
-
-
-def get_session_title(usr_msg: str, model: str) -> str:
-    title_sys_msg = SystemMessage(
-        content="""
-        You are a helpful assistant. You are tasked to generate a chat session title based on the user's first message. Follow these exact rules:
-        
-        1. Start with ONE emoji that clearly relates to the topic (do not use more than one emoji).
-        2. Add a single space after the emoji.
-        3. Write a clear, descriptive title (4-12 words) that summarizes the user's message.
-        4. The title must be a meaningful phrase, not a single word or a random word.
-        5. Do NOT use only emojis, random words, or generic words like "Title" or "Chat".
-        6. Use the same language as the user's message.
-        7. Make it concise, specific, and engaging.
-        8. Do not use quotes, explanations, or extra text
-        9. The title must not exceed 100 characters
-        
-        Common topic emojis to use:
-        - 💻 for coding/programming
-        - 📊 for data/analysis
-        - 🤔 for questions/help
-        - 📝 for writing
-        - 🔍 for research
-        - 💡 for ideas/creativity
-        - 🎯 for goals/planning
-        - 🛠️ for troubleshooting
-        - 📚 for learning/education
-        - 💬 for general chat
-        
-        Examples of good titles:
-        - 💻 Python Script Debugging Help
-        - 📊 Sales Data Analysis Question
-        - 🤔 Career Change Advice Needed
-        - 📝 Creative Writing Story Ideas
-        - 🔍 Research Paper Topic Discussion
-        
-        Bad examples (do NOT do this):
-        - 💻💻
-        - 💡
-        - 🤔 Question
-        - 💬 Title
-        - 📝 Chat
-        - 💻 Python
-        
-        Respond with ONLY the emoji and the title, nothing else.
-        """
-    )
-    prompt = ChatPromptTemplate.from_messages(
-        [title_sys_msg, HumanMessage(content=usr_msg)]
-    )
-    model = OllamaLLM(
-        model=model,
-        base_url=os.getenv("OLLAMA_BASE_URL"),
-    )
-    chain = prompt | model
-    response = chain.invoke({"content": usr_msg})
-
-    # Ensure the title never exceeds 255 characters
-    if len(response) > 255:
-        return response[:200]
-
-    return response
-
-
-def get_ollama_models() -> list[dict]:
-    """
-    Retrieves the list of available models from the Ollama backend.
-    This function queries the Ollama API to check which models are available for chat completions and inferences.
-    """
-    response = requests.get(
-        f"{os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')}/api/tags"
-    )
-    models = response.json()["models"]
-    return models
-
-
-def get_ollama_models_names() -> list[str]:
-    models = get_ollama_models()
-    return [model["name"] for model in models]
-
-
-## LLM END
-
-
-## DATABASE START
-def create_db_sessions_table(conn: Connection):
-    with conn.cursor() as cur:
-        cur.execute(
-            """
-            CREATE TABLE IF NOT EXISTS db_sessions (
-                id UUID PRIMARY KEY,
-                username VARCHAR(255) NOT NULL,
-                title VARCHAR(255) NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-            """
-        )
-        conn.commit()
-
-
-def get_session_by_id(conn: Connection, session_id: str) -> Session | None:
-    """
-    Retrieve a session from the database by its unique session ID.
-
-    Args:
-        conn (Connection): The active database connection.
-        session_id (str): The UUID of the session to retrieve.
-
-    Returns:
-        Session | None: The Session object if found, otherwise None.
-    """
-    with conn.cursor() as cur:
-        cur.execute(
-            """
-            SELECT id, username, title FROM db_sessions WHERE id = %s
-            """,
-            (session_id,),
-        )
-        result = cur.fetchone()
-        if result:
-            return Session(id=str(result[0]), title=result[2], username=result[1])
-        return None
-
-
-def create_session_if_not_exists(
-    conn: Connection, session_id: str, user_name: str, session_title: str
-):
-    """
-    Create a new session in the database if it does not exist.
-
-    Args:
-        conn (Connection): The active database connection.
-        session_id (str): The UUID of the session to create.
-        user_name (str): The username of the user creating the session.
-        session_title (str): The title of the session.
-    """
-    with conn.cursor() as cur:
-        cur.execute(
-            """
-            INSERT INTO db_sessions (id, username, title)
-            VALUES (%s, %s, %s)
-            ON CONFLICT (id) DO NOTHING
-            """,
-            (session_id, user_name, session_title),
-        )
-        conn.commit()
-
-
-table_name = "bd_chat_history"
-CONNECTION_STRING = (
-    f"postgresql://{os.getenv('POSTGRES_USER', 'myuser')}:{os.getenv('POSTGRES_PASSWORD', 'mypassword')}@{os.getenv('POSTGRES_HOST', 'localhost')}"
-    f":{os.getenv('POSTGRES_PORT', 5432)}/{os.getenv('POSTGRES_DB', 'mydatabase')}"
-)
-print(f"CONNECTION_STRING: {CONNECTION_STRING}")
-sync_connection = psycopg.connect(CONNECTION_STRING)
-PostgresChatMessageHistory.create_tables(sync_connection, table_name)
-create_db_sessions_table(sync_connection)
-
-## DATABASE END
-
-
-app = FastAPI()
 
 # For testing purposes, CORS middleware is configured to allow all origins.
 # This is convenient for local development and testing, but should be restricted
 # to specific origins in production for better security. Securing CORS is not
 # part of the current project scope.
 
+app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -367,7 +200,9 @@ async def chat(request: ChatRequest):
     new_usr_msg = HumanMessage(
         content=request.content, id=generate_message_id(), name=request.name
     )
-    prompt = ChatPromptTemplate.from_messages([sys_msg] + prev_messages + [new_usr_msg])
+    prompt = ChatPromptTemplate.from_messages(
+        [chat_sys_msg] + prev_messages + [new_usr_msg]
+    )
     model = OllamaLLM(
         model=request.model,
         base_url=os.getenv("OLLAMA_BASE_URL"),
@@ -423,7 +258,9 @@ async def stream(request: ChatRequest, background_tasks: BackgroundTasks):
         content=request.content, id=generate_message_id(), name=request.name
     )
 
-    messages = [SystemMessage(content=sys_msg.content)] + prev_messages + [new_usr_msg]
+    messages = (
+        [SystemMessage(content=chat_sys_msg.content)] + prev_messages + [new_usr_msg]
+    )
 
     model_with_streaming = OllamaLLM(
         model=request.model,
