@@ -22,7 +22,7 @@ https://github.com/user-attachments/assets/a2ce244e-6ab7-42ed-9618-2f1a3f00534b
 - **Deployment**: Docker & Docker Compose
 
 ## Documentation
-Project documentation is at 
+Project documentation is available via a [Jupyter Notebook](/backend/docs/DOCS.ipynb)
 
 ## Usage
 The application follows the typical workflow and user experience of most chat applications:
