@@ -234,8 +234,8 @@ function ChatContainer({ open }: { open: boolean }) {
   const { session: initialSession, messages: initialMessages } = Route.useLoaderData()
 
   const newMessageSchema = z.object({
-    content: z.string().min(1),
-    model: z.string().min(1),
+    content: z.string().min(1).max(99999),
+    model: z.string().min(1).max(255),
   })
 
   const [messages, setMessages] = useState<MessageData[]>([])

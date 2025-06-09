@@ -12,7 +12,7 @@ export const Route = createFileRoute('/')({
 })
 
 const usernameFormSchema = z.object({
-  username: z.string().min(1),
+  username: z.string().min(1).max(20),
 })
 
 function UsernameForm() {
