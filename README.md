@@ -25,7 +25,7 @@ __Bard__ is an offline, full-stack AI chatbot application designed as a showcase
 - Docker 
 - Docker Container Toolkit
 - Python 3.12
-- Node.js 22
+- Node.js 20
 
 > [!Important]
 > Please modify the `ollama` service in `docker-compose.yml` if you do not have an Nvidia gpu
@@ -55,4 +55,56 @@ docker compose up --build
 You can run the `database` and `ollama` services stand-alone for local testing
 ```bash
 docker compose up -d --build database ollama
+```
+#### FastAPI Backend
+1. Install Python 3.12 on your Local machine
+```bash
+python --version
+>>> Python 3.12.7
+```
+For managing python instances, I usually prefer using a virtual env using [uv](https://docs.astral.sh/uv/getting-started/installation/#standalone-installer)
+```bash
+cd backend
+uv venv 
+source .venv/bin/activate
+uv pip install -r requirements.txt
+```
+
+2. Install requirements then run the `main.py` app via Uvicorn
+```bash
+cd backend
+pip install -r requirements.txt
+
+uv run main.py
+python main.py
+python3 main.py
+```
+
+#### React Frontend
+1. Install `Node.js v20` and [pnpm](https://pnpm.io/) on your Local machine
+```bash
+node -v
+npm install -g pnpm
+
+pnpm setup # if you haven't used pnpm before
+>>> v20.18.0
+```
+For managing Node environments, I prefer to use it via [nvm](https://github.com/nvm-sh/nvm)
+```bash
+nvm i 20
+nvm use 20
+```
+2. Install the requirements and use the .env example
+```bash
+cp .env frontend/.env
+cd frontend
+pnpm install --frozen-lockfile
+```
+
+3. Run the app
+```bash
+pnpm run dev
+
+pnpm run build
+pnpm run start
 ```
