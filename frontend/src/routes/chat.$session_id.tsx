@@ -51,13 +51,27 @@ export const Route = createFileRoute('/chat/$session_id')({
 
 function ThreadsSidebar() {
   const { username } = Route.useSearch()
+  const { session_id } = Route.useParams()
   const { data: sessions } = useQuery({
     queryKey: ['sessions', username],
-    queryFn: () => getSessions({ data: encodeURIComponent(username) }),
+    queryFn: () => getSessions({ data: { name: encodeURIComponent(username), session_id } }),
     initialData: [],
     refetchInterval: 3 * 1000,
   })
   const navigate = useNavigate()
+
+  const isEmoji = (str: string) => {
+    const emojiRegex = /[\p{Emoji}\u{1F3FB}-\u{1F3FF}\u{1F9B0}-\u{1F9B3}]/u;
+    return emojiRegex.test(str);
+  }
+
+  const formatTitle = (title: string) => {
+    const words = title.split(' ');
+    if (words.length > 0 && isEmoji(words[0])) {
+      return `${words[0]}\u00A0\u00A0${words.slice(1).join(' ')}`;
+    }
+    return title;
+  }
 
   return (
     <Sidebar className='dark:bg-neutral-950 bg-neutral-950 z-10 '>
@@ -100,7 +114,7 @@ function ThreadsSidebar() {
                 <Link to={`/chat/$session_id`} search={{ username }} params={{ session_id: session.id }}>
                   <SidebarMenuButton asChild>
                     <Button variant='ghost' className='w-full cursor-pointer justify-start'>
-                      <span className="truncate">{session.title}</span>
+                      <span className="truncate">{formatTitle(session.title)}</span>
                     </Button>
                   </SidebarMenuButton>
                 </Link>
@@ -147,8 +161,8 @@ function MessagesContainer({ messages }: { messages: MessageData[] }) {
     <div className='flex flex-col grow'>
       {messages.length == 0 &&
         <div className='flex flex-col items-start justify-center h-full'>
-          <h1 className='text-2xl font-bold'>Hi {username}, how may I help you today?</h1>
-          <div className='flex flex-wrap gap-2'>
+          <h1 className='text-4xl font-bold'>Hi {username}, how may I help you today?</h1>
+          <div className='flex flex-wrap gap-2 mt-2'>
             <Button variant='outline' className='cursor-pointer rounded-xl px-8 py-2 h-auto'>
               <StarsIcon />
               Create
@@ -331,7 +345,7 @@ function ChatContainer({ open }: { open: boolean }) {
 
 
   return (
-    <main ref={mainRef} className={cn('flex grow dark:bg-neutral-900 flex-col items-center justify-center rounded-lg transition-all duration-300 ease-in-out overflow-y-scroll scrollbar-none', open && "mt-4 ml-4")}>
+    <main ref={mainRef} className={cn('flex grow dark:bg-neutral-900 flex-col items-center justify-center rounded-lg transition-all duration-300 scrollbar scrollbar-track-neutral-900 scrollbar-thumb-neutral-500 ease-in-out overflow-y-scroll', open && "mt-4 ml-4")}>
       <div className="flex flex-col max-w-[50rem] w-[50rem] h-full">
         <MessagesContainer messages={messages} />
         <Form {...form}>
@@ -360,7 +374,6 @@ function ChatContainer({ open }: { open: boolean }) {
                             ref={textareaRef}
                           />
                         </FormControl>
-                        <FormMessage />
                       </FormItem>
                     )}
                   />

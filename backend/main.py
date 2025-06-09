@@ -18,16 +18,14 @@ import requests
 load_dotenv(override=True)
 
 ## LLM START
-system_prompt = (
-    """You are Qwen, created by Alibaba Cloud. You are a helpful assistant."""
-)
+system_prompt = """You are a helpful assistant."""
 sys_msg = SystemMessage(content=system_prompt)
 
 
 def get_session_title(usr_msg: str, model: str) -> str:
-    sys_msg = SystemMessage(
+    title_sys_msg = SystemMessage(
         content="""
-        You are Qwen, created by Alibaba Cloud. You are a helpful assistant. You are tasked to generate a chat session title based on the user's first message. Follow these exact rules:
+        You are a helpful assistant. You are tasked to generate a chat session title based on the user's first message. Follow these exact rules:
         
         1. Start with ONE emoji that clearly relates to the topic (do not use more than one emoji).
         2. Add a single space after the emoji.
@@ -69,7 +67,9 @@ def get_session_title(usr_msg: str, model: str) -> str:
         Respond with ONLY the emoji and the title, nothing else.
         """
     )
-    prompt = ChatPromptTemplate.from_messages([sys_msg, HumanMessage(content=usr_msg)])
+    prompt = ChatPromptTemplate.from_messages(
+        [title_sys_msg, HumanMessage(content=usr_msg)]
+    )
     model = OllamaLLM(
         model=model,
         base_url=os.getenv("OLLAMA_BASE_URL"),
@@ -79,12 +79,17 @@ def get_session_title(usr_msg: str, model: str) -> str:
     return response
 
 
-def get_ollama_models() -> list[str]:
+def get_ollama_models() -> list[dict]:
     response = requests.get(
         f"{os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')}/api/tags"
     )
     models = response.json()["models"]
     return models
+
+
+def get_ollama_models_names() -> list[str]:
+    models = get_ollama_models()
+    return [model["name"] for model in models]
 
 
 ## LLM END
@@ -169,6 +174,15 @@ async def health():
     return {"message": "OK!"}
 
 
+@app.get("/models")
+async def get_models():
+    try:
+        return get_ollama_models()
+    except Exception as e:
+        print(f"Error in get_models: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
 @app.get("/sessions")
 async def get_sessions(name: str):
     formatted_name = unquote(name)
@@ -248,7 +262,7 @@ async def chat(request: ChatRequest):
     if not is_session_id_valid(request.session_id):
         raise HTTPException(status_code=400, detail="Invalid session ID")
 
-    if request.model not in get_ollama_models():
+    if request.model not in get_ollama_models_names():
         raise HTTPException(status_code=400, detail="Invalid model")
 
     # SESSION HANDLING
@@ -291,7 +305,7 @@ async def stream(request: ChatRequest, background_tasks: BackgroundTasks):
     if not is_session_id_valid(request.session_id):
         raise HTTPException(status_code=400, detail="Invalid session ID")
 
-    if request.model not in get_ollama_models():
+    if request.model not in get_ollama_models_names():
         raise HTTPException(status_code=400, detail="Invalid model")
 
     # SESSION HANDLING
@@ -348,9 +362,30 @@ async def stream(request: ChatRequest, background_tasks: BackgroundTasks):
     return response
 
 
+def validate_env_vars():
+    if not os.getenv("OLLAMA_BASE_URL"):
+        raise ValueError("OLLAMA_BASE_URL is not set")
+    if not os.getenv("POSTGRES_HOST"):
+        raise ValueError("POSTGRES_HOST is not set")
+    if not os.getenv("POSTGRES_PORT"):
+        raise ValueError("POSTGRES_PORT is not set")
+    if not os.getenv("POSTGRES_DB"):
+        raise ValueError("POSTGRES_DB is not set")
+    if not os.getenv("POSTGRES_USER"):
+        raise ValueError("POSTGRES_USER is not set")
+    if not os.getenv("POSTGRES_PASSWORD"):
+        raise ValueError("POSTGRES_PASSWORD is not set")
+    print("✅ Environment variables validated")
+
+
 def main():
+    validate_env_vars()
+    load_dotenv(override=True)
     uvicorn.run(
-        "main:app", host="0.0.0.0", port=os.getenv("BACKEND_PORT", 8000), reload=True
+        "main:app",
+        host="0.0.0.0",
+        port=int(os.getenv("BACKEND_PORT", 8000)),
+        reload=True,
     )
 
 

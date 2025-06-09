@@ -57,8 +57,8 @@ export function MessageBox({ message }: { message: MessageData }) {
               : "bg-muted/50"
           )}
         >
-          <CardContent className="p-2">
-            <div className="text-sm leading-loose prose prose-sm max-w-none dark:prose-invert">
+          <CardContent className="px-3 py-2">
+            <div className="text-sm leading-normal prose prose-sm max-w-none dark:prose-invert [&_p]:my-2">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeHighlight, rehypeRaw]}
