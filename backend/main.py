@@ -82,6 +82,11 @@ def get_session_title(usr_msg: str, model: str) -> str:
     )
     chain = prompt | model
     response = chain.invoke({"content": usr_msg})
+
+    # Ensure the title never exceeds 255 characters
+    if len(response) > 255:
+        return response[:200]
+
     return response
 
 

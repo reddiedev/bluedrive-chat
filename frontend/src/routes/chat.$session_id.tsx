@@ -161,7 +161,7 @@ function MessagesContainer({ messages }: { messages: MessageData[] }) {
 
 
   return (
-    <div className='flex flex-col grow'>
+    <div className='flex flex-col grow pb-40'>
       {messages.length == 0 &&
         <div className='flex flex-col items-start justify-center h-full'>
           <h1 className='text-4xl font-bold'>Hi {username}, how may I help you today?</h1>
@@ -352,11 +352,10 @@ function ChatContainer({ open }: { open: boolean }) {
       <div className="flex flex-col max-w-[50rem] w-[50rem] h-full">
         <MessagesContainer messages={messages} />
         <div className='fixed bottom-0 z-40 max-w-[50rem] w-full'>
-
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleMessageSubmit)} className="flex flex-col space-y-8 w-full">
-              <div className="flex flex-row items-center gap-2 p-2 bg-neutral-950 rounded-xl rounded-b-none pb-0">
-                <div className="rounded-xl bg-neutral-900 w-full flex flex-col rounded-b-none pb-0">
+            <form onSubmit={form.handleSubmit(handleMessageSubmit)} className="flex flex-col space-y-8 w-full" >
+              <div className="isolate backdrop-blur-sm flex flex-row items-center gap-2 p-2 bg-neutral-800/20 border-[1px] border-b-0 border-neutral-800 rounded-xl rounded-b-none pb-0">
+                <div className="isolate rounded-xl bg-neutral-800/20 border-[1px] border-b-0 border-neutral-800 w-full flex flex-col rounded-b-none pb-0">
                   <div className="p-2">
                     <FormField
                       control={form.control}
@@ -366,7 +365,7 @@ function ChatContainer({ open }: { open: boolean }) {
                           <FormControl>
                             <Textarea
                               placeholder="Type your message..."
-                              className="border-none p-2 scrollbar-none bg-neutral-900 px-0 py-2 dark:bg-neutral-900 dark:selection:bg-neutral-900 focus-visible:ring-0 resize-none"
+                              className="border-none p-2 scrollbar-none bg-transparent dark:bg-transparent not-[]: px-0 py-2  focus-visible:ring-0 resize-none"
                               onInput={adjustTextareaHeight}
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey) {
