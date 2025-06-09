@@ -2,6 +2,7 @@ export type SessionData = {
   id: string,
   title: string,
   username: string
+  isNew?: boolean
 }
 
 export type MessageData = {

@@ -24,6 +24,7 @@ export const getSessions = createServerFn({
         id: data.session_id,
         title: "🧵 New Thread",
         username: data.name,
+        isNew: true,
       })
     }
 
