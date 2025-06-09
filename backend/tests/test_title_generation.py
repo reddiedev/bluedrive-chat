@@ -27,7 +27,7 @@ def test_title_generation():
     ]
 
     for test_case in test_cases:
-        title = get_session_title(test_case["message"], "llama3.2:1b")
+        title = get_session_title(test_case["message"], "gemma3:1b")
 
         # Test emoji presence (check if first character is an emoji)
         assert len(title) > 0, "Title should not be empty"

@@ -7,7 +7,7 @@ class ChatRequest(BaseModel):
     name: str = "User"
     session_id: str
     content: str
-    model: str = "qwen2.5-coder:1.5b"
+    model: str = "gemma3:1b"
 
 
 class SessionsRequest(BaseModel):

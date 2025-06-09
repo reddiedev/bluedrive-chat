@@ -1,4 +1,3 @@
-import pytest
 from fastapi.testclient import TestClient
 from main import app
 import time
@@ -14,7 +13,7 @@ client = TestClient(app)
 # Test data
 VALID_SESSION_ID = str(uuid.uuid4())
 TEST_USERNAME = "testuser"
-TEST_MODEL = "llama3.2:1b"  # Using the default model from types.py
+TEST_MODEL = "gemma3:1b"  # Using the default model from types.py
 
 
 # Database transaction handling

@@ -13,7 +13,7 @@ def test_is_ollama_running():
 def test_chat_completion():
     response = requests.post(
         f"{ollama_base_url}/api/generate",
-        json={"model": "llama3.2:1b", "prompt": "Hello, how are you?"},
+        json={"model": "gemma3:1b", "prompt": "Hello, how are you?"},
     )
     assert response.status_code == 200, (
         f"Chat completion failed with status code {response.status_code}: {response.text}"
