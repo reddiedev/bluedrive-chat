@@ -198,7 +198,7 @@ function MessagesContainer({ messages }: { messages: MessageData[] }) {
   const { username } = Route.useSearch()
 
   return (
-    <div className='flex flex-col grow pb-60'>
+    <div className='flex flex-col grow pb-52'>
       {messages.map((message) => (
         <MessageBox key={message.id} message={message} />
       ))}
