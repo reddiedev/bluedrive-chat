@@ -449,7 +449,7 @@ function ChatContainer({ open }: { open: boolean }) {
                       )}
                     />
 
-                    <Button size="icon" id='send-message-button' type="submit" className='cursor-pointer'>
+                    <Button size="icon" id='send-message-button' type="submit" className='cursor-pointer' disabled={models.length == 0}>
                       <ArrowUp />
                     </Button>
                   </div>
