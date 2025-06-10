@@ -101,7 +101,7 @@ export function MessageBox({ message }: { message: MessageData }) {
                 {message.content}
               </ReactMarkdown>
             </div>}
-            {message.content == "" && <Skeleton className="w-full h-4" />}
+            {message.content == "" && <Skeleton className="w-64 h-8" />}
           </CardContent>
         </Card>
 
