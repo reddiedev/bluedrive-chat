@@ -4,6 +4,7 @@ import { createFileRoute, Link, useNavigate, } from '@tanstack/react-router'
 import { ArrowUp, BookOpenIcon, Code2Icon, MessageCircleIcon, NewspaperIcon, SearchIcon, StarsIcon } from 'lucide-react'
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { toast } from 'sonner'
 import { z } from 'zod'
 import { MessageBox } from '~/components/chat/messages'
 
@@ -230,6 +231,16 @@ function ChatContainer({ open }: { open: boolean }) {
   const { session_id } = Route.useParams()
   const { models } = Route.useLoaderData()
   const mainRef = useRef<HTMLDivElement>(null)
+
+  if (models.length == 0) {
+    toast.error("No Ollama models found", {
+      description: "Please check your backend configuration and make sure that Ollama is running and that the models are loaded.",
+      duration: 10000,
+      id: "no-models-found",
+
+    })
+  }
+
 
   const { session: initialSession, messages: initialMessages } = Route.useLoaderData()
 

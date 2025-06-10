@@ -7,6 +7,7 @@ import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import rehypeHighlight from "rehype-highlight"
 import rehypeRaw from "rehype-raw"
+import { Skeleton } from "~/components/ui/skeleton"
 
 export function MessageBox({ message }: { message: MessageData }) {
   const isUser = message.role === "user"
@@ -58,7 +59,7 @@ export function MessageBox({ message }: { message: MessageData }) {
           )}
         >
           <CardContent className="px-3 py-2">
-            <div className="text-sm leading-normal prose prose-sm max-w-none dark:prose-invert [&_p]:my-2">
+            {message.content !== "" && <div className="text-sm leading-normal prose prose-sm max-w-none dark:prose-invert [&_p]:my-2">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeHighlight, rehypeRaw]}
@@ -99,7 +100,8 @@ export function MessageBox({ message }: { message: MessageData }) {
               >
                 {message.content}
               </ReactMarkdown>
-            </div>
+            </div>}
+            {message.content == "" && <Skeleton className="w-full h-4" />}
           </CardContent>
         </Card>
 
