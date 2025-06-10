@@ -207,25 +207,6 @@ function MessagesContainer({ messages }: { messages: MessageData[] }) {
   )
 }
 
-function LoadingContainer() {
-  return (
-    <div className='flex flex-col items-center justify-start grow pb-40 pt-10 gap-4'>
-      <div className='flex justify-end w-full'>
-        <Skeleton className='w-64 h-10' />
-      </div>
-      <div className='flex justify-start w-full'>
-        <Skeleton className='w-80 h-10' />
-      </div>
-      <div className='flex justify-end w-full'>
-        <Skeleton className='w-52 h-10' />
-      </div>
-      <div className='flex justify-start w-full'>
-        <Skeleton className='w-96 h-20' />
-      </div>
-    </div>
-  )
-}
-
 function ChatContainer({ open }: { open: boolean }) {
   const { username } = Route.useSearch()
   const { session_id } = Route.useParams()
