@@ -198,7 +198,7 @@ function MessagesContainer({ messages }: { messages: MessageData[] }) {
   const { username } = Route.useSearch()
 
   return (
-    <div className='flex flex-col grow pb-40'>
+    <div className='flex flex-col grow pb-60'>
       {messages.map((message) => (
         <MessageBox key={message.id} message={message} />
       ))}
@@ -254,6 +254,7 @@ function ChatContainer({ open }: { open: boolean }) {
   })
 
   const [messages, setMessages] = useState<MessageData[]>([])
+  const isScrollingRef = useRef(false)
 
   const { data: sessionData, isFetched: isSessionFetched } = useQuery({
     queryKey: ['session', session_id],
@@ -263,10 +264,22 @@ function ChatContainer({ open }: { open: boolean }) {
 
   // Scroll to bottom when messages change
   useEffect(() => {
-    if (mainRef.current) {
-      mainRef.current.scrollTo({
-        top: mainRef.current.scrollHeight,
-        behavior: 'smooth'
+    if (mainRef.current && !isScrollingRef.current) {
+      isScrollingRef.current = true
+
+      // Use requestAnimationFrame to ensure DOM has updated
+      requestAnimationFrame(() => {
+        if (mainRef.current) {
+          mainRef.current.scrollTo({
+            top: mainRef.current.scrollHeight,
+            behavior: 'smooth'
+          })
+
+          // Reset scroll lock after animation completes
+          setTimeout(() => {
+            isScrollingRef.current = false
+          }, 300) // Typical duration of smooth scroll
+        }
       })
     }
   }, [messages])

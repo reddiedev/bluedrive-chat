@@ -58,8 +58,8 @@ export function MessageBox({ message }: { message: MessageData }) {
               : "bg-muted/50"
           )}
         >
-          <CardContent className="px-3 py-2">
-            {message.content !== "" && <div className="text-sm leading-normal prose prose-sm max-w-none dark:prose-invert [&_p]:my-2">
+          {message.content !== "" && <CardContent className="px-3 py-2">
+            <div className="text-sm leading-normal prose prose-sm max-w-none dark:prose-invert [&_p]:my-2">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeHighlight, rehypeRaw]}
@@ -100,9 +100,9 @@ export function MessageBox({ message }: { message: MessageData }) {
               >
                 {message.content}
               </ReactMarkdown>
-            </div>}
-            {message.content == "" && <Skeleton className="w-64 h-8" />}
-          </CardContent>
+            </div>
+          </CardContent>}
+          {message.content == "" && <Skeleton className="w-64 h-8" />}
         </Card>
 
         {/* Timestamp */}
