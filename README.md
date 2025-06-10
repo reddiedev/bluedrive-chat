@@ -58,8 +58,11 @@ cp .env.example frontend/.env
 ```
 3. Start the application stack
 ```bash
+docker compose down -v # remove old containers and volumes, if any
 docker compose up --build
 ```
+> On my machine, it takes roughly ~1 minute to build all services without cache, then around ~5 minutes to download each of the models depending on your network speed.
+
 4. On your browser, you can view the app at [http://localhost:3000](http://localhost:3000)
 
 > [!CAUTION]
