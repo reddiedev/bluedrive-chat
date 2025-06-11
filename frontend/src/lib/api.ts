@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start"
 import axios, { AxiosResponse } from "axios"
 import { MessageData, ModelData, SessionData } from "~/lib/api.types"
-
+import fs from "node:fs"
 
 export const getSessions = createServerFn({
   method: 'GET',
@@ -70,3 +70,63 @@ export const getModels = createServerFn({
   }
 })
 
+
+export const streamCompletion = createServerFn({
+  method: 'POST',
+  response: 'raw',
+}).validator(({ name, session_id, content, model }: { name: string, session_id: string, content: string, model: string }) => {
+  return {
+    name: name,
+    session_id: session_id,
+    content: content,
+    model: model,
+  }
+}).handler(async ({ data, signal }) => {
+  try {
+
+    const response = await axios.post(`${import.meta.env.VITE_BACKEND_BASE_URL}/stream`, data, {
+      responseType: 'stream',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      signal
+    });
+
+    const stream = new ReadableStream({
+        start(controller) {
+          response.data.on('data', (chunk: Buffer) => {
+            controller.enqueue(chunk);
+          });
+
+          response.data.on('end', () => {
+            controller.close();
+          });
+
+          response.data.on('error', (error: Error) => {
+            controller.error(error);
+          });
+
+          // Handle abort signal
+          signal?.addEventListener('abort', () => {
+            response.data.destroy();
+            controller.close();
+          });
+        },
+      });
+
+      return new Response(stream, {
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        },
+      });
+  } catch (error: unknown) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      // Handle abort gracefully
+      return new Response('', { status: 499 });
+    }
+    console.error('Streaming error:', error);
+    throw error;
+  }
+})

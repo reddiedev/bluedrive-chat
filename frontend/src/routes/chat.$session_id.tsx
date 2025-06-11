@@ -19,7 +19,7 @@ import { Skeleton } from '~/components/ui/skeleton'
 import { Textarea } from '~/components/ui/textarea'
 
 
-import { getSession, getSessions, getModels } from '~/lib/api'
+import { getSession, getSessions, getModels, streamCompletion } from '~/lib/api'
 import { MessageData } from '~/lib/api.types'
 import { cn } from '~/lib/utils'
 
@@ -310,17 +310,13 @@ function ChatContainer({ open }: { open: boolean }) {
     }])
 
     try {
-      const response = await fetch(STREAMING_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const response = await streamCompletion({
+        data: {
           name: username,
           session_id: session_id,
           content: content,
           model: values.model
-        })
+        }
       })
 
       if (!response.ok) {
