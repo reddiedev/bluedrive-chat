@@ -58,7 +58,7 @@ export const Route = createFileRoute('/chat/$session_id')({
 function ThreadsSidebar() {
   const { username } = Route.useSearch()
   const { session_id } = Route.useParams()
-  const { data: sessions, refetch: refetchSessions, } = useQuery({
+  const { data: sessions, } = useQuery({
     queryKey: ['sessions', username, session_id],
     queryFn: () => getSessions({ data: { name: encodeURIComponent(username), session_id } }),
     initialData: [],
@@ -78,6 +78,23 @@ function ThreadsSidebar() {
     return title;
   }
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Check for Cmd/Ctrl + Shift + O
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === '/') {
+        handleNewThread()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [handleNewThread])
+
+  async function handleNewThread() {
+    const session_id = crypto.randomUUID()
+    navigate({ to: '/chat/$session_id', params: { session_id }, search: { username } })
+  }
+
   return (
     <Sidebar className='dark:bg-neutral-950 bg-neutral-950 z-10 '>
 
@@ -90,11 +107,7 @@ function ThreadsSidebar() {
 
 
       <div className='px-4 pt-2'>
-        <Button id='new-thread-button' className='w-full cursor-pointer justify-center' onClick={async () => {
-          const session_id = crypto.randomUUID()
-          navigate({ to: '/chat/$session_id', params: { session_id }, search: { username } })
-          await refetchSessions()
-        }}>
+        <Button id='new-thread-button' className='w-full cursor-pointer justify-center' onClick={handleNewThread}>
           <MessageCircleIcon />
           New Thread
         </Button>
@@ -144,6 +157,10 @@ function ThreadsSidebar() {
       </SidebarContent>
 
       <SidebarFooter className='py-6 px-4'>
+        <p className='text-neutral-500 text-left text-xs font-mono pb-2'>
+          [cmd/ctrl + /] for new thread
+          [cmd/ctrl + b] toggle sidebar
+        </p>
         <div className='flex items-center gap-2'>
           <Avatar className='size-7'>
             <AvatarImage src='https://cdn.reddie.dev/assets/avatar.jpg' />
@@ -410,6 +427,10 @@ function ChatContainer({ open }: { open: boolean }) {
           </div>}
         {isSessionFetched && messages.length > 0 && <MessagesContainer messages={messages} />}
         <div className='fixed bottom-0 z-40 max-w-[50rem] w-full'>
+          <p className='text-neutral-500 text-right text-xs font-mono pb-2'>
+            [shift + enter] for new line
+            [enter] to send message
+          </p>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleMessageSubmit)} className="flex flex-col space-y-8 w-full" >
               <div className="isolate backdrop-blur-sm flex flex-row items-center gap-2 p-2 bg-neutral-800/20 border-[1px] border-b-0 border-neutral-800 rounded-xl rounded-b-none pb-0">
@@ -464,11 +485,11 @@ function ChatContainer({ open }: { open: boolean }) {
                         </FormItem>
                       )}
                     />
-
                     <Button size="icon" id='send-message-button' type="submit" className='cursor-pointer' disabled={models.length == 0}>
                       <ArrowUp />
                     </Button>
                   </div>
+
                 </div>
               </div>
 
