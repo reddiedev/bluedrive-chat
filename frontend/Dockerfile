@@ -11,8 +11,6 @@ RUN corepack enable pnpm && corepack prepare pnpm@latest --activate && pnpm i --
 
 COPY . .
 
-ARG VITE_BACKEND_BASE_URL
-ENV VITE_BACKEND_BASE_URL=${VITE_BACKEND_BASE_URL}
 
 RUN pnpm run build
 
