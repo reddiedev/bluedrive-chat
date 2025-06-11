@@ -277,7 +277,7 @@ function ChatContainer({ open }: { open: boolean }) {
     resolver: zodResolver(newMessageSchema),
     defaultValues: {
       content: "",
-      model: models.length > 0 ? models[0].model : "qwen2.5-coder:1.5b",
+      model: models.length > 0 ? models[0].model : "gemma3:1b",
     },
   })
 
