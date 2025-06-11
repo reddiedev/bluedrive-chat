@@ -43,7 +43,7 @@ The application follows the typical workflow and user experience of most chat ap
 - [Node.js](https://nodejs.org/en)
 
 > [!Important]
-> Please modify the `ollama` service in `docker-compose.yml` if you do not have an Nvidia gpu
+> Please modify use `docker-compose.yml` if you do not have an Nvidia GPU. Otherwise, `docker-compose.nvidia.yml` has a modified `ollama` service with GPU capability provided you have an Nvidia GPU and [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) installed
 
 ### Quickstart via Docker
 1. Clone the repository
