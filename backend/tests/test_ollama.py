@@ -27,8 +27,8 @@ def test_get_ollama_models_names():
     assert all(isinstance(model, str) for model in models), (
         "Some model names are not strings"
     )
-    assert "llama3.2:1b" in models, (
-        "Required model 'llama3.2:1b' not found in available models"
+    assert "qwen3:0.6b" in models, (
+        "Required model 'qwen3:0.6b' not found in available models"
     )
     assert "gemma3:1b" in models, (
         "Required model 'gemma3:1b' not found in available models"

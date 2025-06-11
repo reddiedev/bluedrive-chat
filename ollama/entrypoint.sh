@@ -12,7 +12,7 @@ done
 echo "[bd_ollama]: Ollama server is ready!"
 
 # Pull models if they don't exist
-MODELS=("gemma3:1b" "llama3.2:1b")
+MODELS=("gemma3:1b" "qwen3:0.6b")
 
 for model in "${MODELS[@]}"; do
   echo "[bd_ollama]: Checking if model $model exists..."

@@ -66,7 +66,7 @@ docker compose down -v # remove old containers and volumes, if any
 # recommended: download ollama models first 
 docker compose up --build ollama
 # you can view download progress by running the following commands in a separate terminal
-docker exec -it bd_ollama ollama pull llama3.2:1b
+docker exec -it bd_ollama ollama pull qwen3:0.6b
 docker exec -it bd_ollama ollama pull gemma3:1b
 
 # ollama CPU
