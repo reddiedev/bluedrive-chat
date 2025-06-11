@@ -6,6 +6,7 @@ import { Button } from '~/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '~/components/ui/form'
 import { Input } from '~/components/ui/input'
+import ModelsChecker from '~/components/chat/models-checker'
 
 export const Route = createFileRoute('/')({
   component: Home,
@@ -71,8 +72,10 @@ function UsernameForm() {
 }
 
 function Home() {
+
   return (
     <div className="bg-neutral-950 w-full font-display text-white min-h-screen h-auto flex flex-col">
+      <ModelsChecker />
       <section className='flex flex-col items-center justify-center h-screen'>
         <UsernameForm />
       </section>
