@@ -58,7 +58,7 @@ export function MessageBox({ message }: { message: MessageData }) {
               : "bg-muted/50"
           )}
         >
-          {message.content !== "" && <CardContent className="px-3 py-2">
+          {message.content !== "" && <CardContent className="p-4 py-3">
             <div className="text-sm leading-normal prose prose-sm max-w-none dark:prose-invert [&_p]:my-2">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
