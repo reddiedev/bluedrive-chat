@@ -74,6 +74,7 @@ services:
       retries: 10
       start_period: 1s
   frontend:
+    tty: true
     image: bd_frontend:latest
     container_name: bd_frontend
     build:
