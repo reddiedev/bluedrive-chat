@@ -58,11 +58,16 @@ export const Route = createFileRoute('/chat/$session_id')({
 function ThreadsSidebar() {
   const { username } = Route.useSearch()
   const { session_id } = Route.useParams()
-  const { data: sessions, } = useQuery({
+  const { data: sessions } = useQuery({
     queryKey: ['sessions', username, session_id],
     queryFn: () => getSessions({ data: { name: encodeURIComponent(username), session_id } }),
     initialData: [],
+    refetchInterval: (query) => {
+      const newSession = query.state.data?.find((session) => session.title === "🧵 New Thread")
+      return newSession ? 3 * 1000 : false
+    },
   })
+
   const navigate = useNavigate()
 
   const isEmoji = (str: string) => {
