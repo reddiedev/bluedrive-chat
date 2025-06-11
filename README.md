@@ -76,10 +76,10 @@ docker exec -it bd_ollama ollama pull qwen3:0.6b
 docker exec -it bd_ollama ollama pull gemma3:1b
 
 # ollama CPU
-docker compose up --build --verbose
+docker compose up --build
 
 # ollama Nvidia GPU
-docker compose -f docker-compose.nvidia.yml up --build --verbose
+docker compose -f docker-compose.nvidia.yml up --build
 ```
 > On my machine, it takes roughly ~1 minute to build all services without cache, then around ~5 minutes to download all the models depending on your network speed.
 
