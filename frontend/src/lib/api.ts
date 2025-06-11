@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start"
 import axios, { AxiosResponse } from "axios"
 import { MessageData, ModelData, SessionData } from "~/lib/api.types"
-import fs from "node:fs"
 
 export const getSessions = createServerFn({
   method: 'GET',
@@ -13,7 +12,7 @@ export const getSessions = createServerFn({
   }
 }).handler(async ({ data }) => {
   try {
-    const url = `${import.meta.env.VITE_BACKEND_BASE_URL}/sessions?name=${data.name}`
+    const url = `${process.env.BACKEND_BASE_URL}/sessions?name=${data.name}`
   
     const response: AxiosResponse<SessionData[]> = await axios.get(url)
 
@@ -45,7 +44,7 @@ export const getSession = createServerFn({
   }
 }).handler(async ({ data }) => {
   try {
-    const url = `${import.meta.env.VITE_BACKEND_BASE_URL}/session?session_id=${data.session_id}`
+    const url = `${process.env.BACKEND_BASE_URL}/session?session_id=${data.session_id}`
     
     const response: AxiosResponse<{ session: SessionData, messages: MessageData[] }> = await axios.get(url)
     return response.data
@@ -60,8 +59,7 @@ export const getModels = createServerFn({
   response: 'data',
 }).handler(async () => {
   try {
-    const url = `${import.meta.env.VITE_BACKEND_BASE_URL}/models`
-   
+    const url = `${process.env.BACKEND_BASE_URL}/models`   
     const response: AxiosResponse<ModelData[]> = await axios.get(url)
     return response.data
   } catch (err) {
@@ -83,7 +81,7 @@ export const streamCompletion = createServerFn({
   }
 }).handler(async ({ data,  }) => {
   try {
-    const response = await axios.post(`${import.meta.env.VITE_BACKEND_BASE_URL}/stream`, data, {
+    const response = await axios.post(`${process.env.BACKEND_BASE_URL}/stream`, data, {
       responseType: 'stream',
       headers: {
         'Content-Type': 'application/json',
