@@ -59,10 +59,9 @@ function ThreadsSidebar() {
   const { username } = Route.useSearch()
   const { session_id } = Route.useParams()
   const { data: sessions, refetch: refetchSessions, } = useQuery({
-    queryKey: ['sessions', username],
+    queryKey: ['sessions', username, session_id],
     queryFn: () => getSessions({ data: { name: encodeURIComponent(username), session_id } }),
     initialData: [],
-    refetchInterval: 1 * 1000,
   })
   const navigate = useNavigate()
 
@@ -282,10 +281,6 @@ function ChatContainer({ open }: { open: boolean }) {
   })
 
   // get streaming response from backend 
-
-  const STREAMING_URL = `${import.meta.env.VITE_BACKEND_BASE_URL}/stream`
-
-
   async function handleMessageSubmit(values: z.infer<typeof newMessageSchema>) {
     form.reset()
     const { content } = values
@@ -316,7 +311,8 @@ function ChatContainer({ open }: { open: boolean }) {
           session_id: session_id,
           content: content,
           model: values.model
-        }
+        },
+
       })
 
       if (!response.ok) {
@@ -366,6 +362,7 @@ function ChatContainer({ open }: { open: boolean }) {
         message: error instanceof Error ? error.message : 'Failed to send message'
       })
     }
+
   }
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
