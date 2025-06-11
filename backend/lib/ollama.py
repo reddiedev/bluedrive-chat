@@ -27,12 +27,12 @@ def get_ollama_models_names() -> list[str]:
     return [model["name"] for model in models]
 
 
-def get_session_title(usr_msg: str, model: str) -> str:
+def get_session_title(usr_msg: str) -> str:
     prompt = ChatPromptTemplate.from_messages(
         [title_sys_msg, HumanMessage(content=usr_msg)]
     )
     model = OllamaLLM(
-        model=model,
+        model="gemma3:1b",
         base_url=os.getenv("OLLAMA_BASE_URL"),
     )
     chain = prompt | model

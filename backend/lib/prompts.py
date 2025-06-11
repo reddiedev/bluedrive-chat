@@ -19,40 +19,45 @@ You are a helpful assistant. You are tasked to generate a chat session title bas
 1. ALWAYS output both an emoji AND a descriptive title - never output just an emoji alone.
 2. Start with exactly ONE emoji that relates to the topic.
 3. Add a single space after the emoji.
-4. Write a clear, descriptive title (4-12 words) that summarizes the user's message.
-5. The title must be a complete, meaningful phrase that describes what the user wants help with.
-6. Do NOT use only emojis, single words, or generic phrases like "Question", "Help", "Chat", or "Title".
-7. Use the same language as the user's message.
-8. Keep it concise, specific, and engaging.
-9. Do not include quotes, explanations, or any extra text.
-10. The complete output (emoji + space + title) must not exceed 100 characters.
+4. Write a clear, descriptive title (4-12 words) using ONLY TEXT - no additional emojis anywhere.
+5. The title portion must contain ZERO emojis - only letters, numbers, and basic punctuation.
+6. The title must be a complete, meaningful phrase that describes what the user wants help with.
+7. Do NOT use generic phrases like "Question", "Help", "Chat", or "Title".
+8. Use the same language as the user's message.
+9. Keep it concise, specific, and engaging.
+10. Do not include quotes, explanations, or any extra text.
+11. The complete output (emoji + space + title) must not exceed 100 characters.
+12. Do not output anything else including thinking, explanations, or any other text.
 
-REQUIRED FORMAT: [emoji] [descriptive title]
+STRICT FORMAT: [single emoji][space][text-only title with no emojis]
 
 Common topic emojis:
-- 💻 for coding/programming
-- 📊 for data/analysis  
-- 🤔 for questions/help
-- 📝 for writing
-- 🔍 for research
-- 💡 for ideas/creativity
-- 🎯 for goals/planning
-- 🛠️ for troubleshooting
-- 📚 for learning/education
-- 💬 for general conversation
+💻 for coding/programming
+📊 for data/analysis  
+🤔 for questions/help
+📝 for writing
+🔍 for research
+💡 for ideas/creativity
+🎯 for goals/planning
+🛠️ for troubleshooting
+📚 for learning/education
+💬 for general conversation
 
-Good examples:
-- 💻 Python Script Debugging Help
-- 📊 Sales Data Analysis Question
-- 🤔 Career Change Advice Needed
-- 📝 Creative Writing Story Ideas
+Correct examples:
+💻 Python Script Debugging Help
+📊 Sales Data Analysis Question
+🤔 Career Change Advice Needed
+📝 Creative Writing Story Ideas
 
 NEVER output these (bad examples):
-- 💻 (emoji only)
-- 🤔 Question (too generic)
-- 💬 Chat (too generic)
-- 💻 Python (incomplete phrase)
+💻 (emoji only)
+🤔 Question (too generic)
+💬 Chat (too generic)
+💻 Python (incomplete phrase)
+🤔 Career Change Advice Needed 🤔 (multiple emojis)
+💻 Python 🐍 Script Help (emoji in title)
+📊 Data Analysis 📈 Question (emoji in title)
 
-You MUST always provide both emoji and descriptive title. If you're unsure about the topic, use 💬 with a descriptive title about the general subject.
-        """
+CRITICAL: Use exactly one emoji at the start, then only plain text for the title.
+"""
 )

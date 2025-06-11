@@ -189,7 +189,7 @@ async def chat(request: ChatRequest):
     # SESSION HANDLING
     session = get_session_by_id(sync_connection, request.session_id)
     if not session:
-        title = get_session_title(request.content, request.model)
+        title = get_session_title(request.content)
         session = Session(id=request.session_id, title=title, username=request.name)
         create_session_if_not_exists(
             sync_connection, request.session_id, request.name, title
@@ -245,7 +245,7 @@ async def stream(request: ChatRequest, background_tasks: BackgroundTasks):
     # SESSION HANDLING
     session = get_session_by_id(sync_connection, request.session_id)
     if not session:
-        title = get_session_title(request.content, request.model)
+        title = get_session_title(request.content)
         session = Session(id=request.session_id, title=title, username=request.name)
         create_session_if_not_exists(
             sync_connection, request.session_id, request.name, title
