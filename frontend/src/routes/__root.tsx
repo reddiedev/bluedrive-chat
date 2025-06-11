@@ -10,6 +10,8 @@ import { NotFound } from '~/components/NotFound'
 import appCss from '~/styles/app.css?url'
 import { seo } from '~/utils/seo'
 import { Toaster } from "~/components/ui/sonner"
+import { QueryClient } from '@tanstack/react-query'
+import { QueryClientProvider } from '@tanstack/react-query'
 
 export const Route = createRootRoute({
   head: () => ({
@@ -67,17 +69,22 @@ export const Route = createRootRoute({
   },
   notFoundComponent: () => <NotFound />,
   component: RootComponent,
+
 })
 
 function RootComponent() {
-  return (
 
+  return (
     <RootDocument>
-      <Outlet />
+      <QueryClientProvider client={queryClient}>
+        <Outlet />
+      </QueryClientProvider>
     </RootDocument>
 
   )
 }
+
+const queryClient = new QueryClient()
 
 
 function RootDocument({ children }: { children: React.ReactNode }) {

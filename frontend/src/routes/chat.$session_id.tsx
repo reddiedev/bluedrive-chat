@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, Link, useNavigate, } from '@tanstack/react-router'
 import { ArrowUp, BookOpenIcon, Code2Icon, MessageCircleIcon, NewspaperIcon, SearchIcon, StarsIcon } from 'lucide-react'
 import { Fragment, useEffect, useRef, useState } from 'react'
@@ -23,7 +23,6 @@ import { getSession, getSessions, getModels, streamCompletion } from '~/lib/api'
 import { MessageData } from '~/lib/api.types'
 import { cn } from '~/lib/utils'
 
-const queryClient = new QueryClient()
 
 export const Route = createFileRoute('/chat/$session_id')({
   validateSearch: (search: Record<string, unknown>) => {
@@ -331,12 +330,6 @@ function ChatContainer({ open }: { open: boolean }) {
           )
         )
       }
-
-      if (messages.length === 0) {
-        setTimeout(async () => {
-          await queryClient.invalidateQueries({ queryKey: ['sessions'] })
-        }, 2 * 1000)
-      }
     } catch (error) {
       console.error('Error:', error)
       // Remove the temporary message on error
@@ -505,13 +498,13 @@ function RouteComponent() {
   const [open, setOpen] = useState(true)
   return (
     <SidebarProvider open={open} onOpenChange={setOpen}>
-      <QueryClientProvider client={queryClient}>
-        <div className='bg-neutral-950 relative w-full font-display antialiased scroll-smooth text-white h-screen max-h-screen overflow-hidden flex flex-row'>
-          <SidebarTrigger className='absolute top-3 left-4 z-40 bg-neutral-950 p-4 rounded-lg shadow-lg cursor-pointer' />
-          <ThreadsSidebar />
-          <ChatContainer open={open} />
-        </div>
-      </QueryClientProvider>
+
+      <div className='bg-neutral-950 relative w-full font-display antialiased scroll-smooth text-white h-screen max-h-screen overflow-hidden flex flex-row'>
+        <SidebarTrigger className='absolute top-3 left-4 z-40 bg-neutral-950 p-4 rounded-lg shadow-lg cursor-pointer' />
+        <ThreadsSidebar />
+        <ChatContainer open={open} />
+      </div>
+
     </SidebarProvider>
   )
 }
