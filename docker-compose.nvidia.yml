@@ -16,6 +16,13 @@ services:
     networks:
       bd_network:
         ipv4_address: "172.28.0.10"
+    deploy: # If you do not have an Nvidia GPU, remove this section
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     healthcheck:
       test:  [ "CMD-SHELL", "bash", "-c", "{ printf >&3 'GET / HTTP/1.0\\r\\n\\r\\n'; cat <&3; } 3<>/dev/tcp/localhost/11434 | grep 'Ollama is' || exit 1"  ]
       interval: 10s

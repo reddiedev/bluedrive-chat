@@ -59,7 +59,12 @@ cp .env.example frontend/.env
 3. Start the application stack
 ```bash
 docker compose down -v # remove old containers and volumes, if any
+
+# ollama CPU
 docker compose up --build
+
+# ollama Nvidia GPU
+docker compose -f docker-compose.nvidia.yml up --build
 ```
 > On my machine, it takes roughly ~1 minute to build all services without cache, then around ~5 minutes to download all the models depending on your network speed.
 
