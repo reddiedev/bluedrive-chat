@@ -32,7 +32,7 @@ The application follows the typical workflow and user experience of most chat ap
 
 ## Getting Started
 > [!NOTE]
-> The project was develoepd and tested on a machine running Ubuntu 24.04 LTS with a x64 Ryzen 5 CPU, 16 GB RAM, and Nvidia GPU
+> The project was develoepd and tested on a machine running Ubuntu 24.04 LTS with a x64 Ryzen 5 CPU, 16 GB RAM, and Nvidia GPU. However, it was tested to work in Windows 11 on the same system, then on MacOS Sequoia running on Apple Silicon (M2)
 
 ### Requirements
 
@@ -70,6 +70,7 @@ docker compose down -v # remove old containers and volumes, if any
 
 # recommended: download ollama models first 
 docker compose up --build ollama
+
 # you can view download progress by running the following commands in a separate terminal
 docker exec -it bd_ollama ollama pull qwen3:0.6b
 docker exec -it bd_ollama ollama pull gemma3:1b
@@ -85,7 +86,7 @@ docker compose -f docker-compose.nvidia.yml up --build
 5. On your browser, you can view the app at [http://localhost:3000](http://localhost:3000)
 
 > [!CAUTION]
-> The first run will take some time, as the models are being downloaded for Ollama
+> The first run will take some time, as the models are being downloaded for Ollama. Additionally, please allocate `~10 GB` of system space for the containers (the bulk of it is taken up by Ollama)
 
 
 
