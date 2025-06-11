@@ -6,7 +6,7 @@ services:
       context: ./ollama        
       dockerfile: Dockerfile
     ports:
-      - "${OLLAMA_PORT:-11434}:11434"
+      - "${HOST_OLLAMA_PORT:-11434}:11434"
     volumes:
       - bd_ollama_data:/root/.ollama
     environment:
@@ -21,13 +21,20 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
-      start_period: 10s
+      start_period: 1s
+    deploy: # If you do not have an Nvidia GPU, remove this section
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
   database:
     image: postgres:16
     restart: always
     container_name: bd_database
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "${HOST_POSTGRES_PORT:-5432}:5432"
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -51,10 +58,10 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     ports:
-      - "${BACKEND_PORT:-8000}:8000"
+      - "${HOST_BACKEND_PORT:-8000}:8000"
     environment:
-      - OLLAMA_BASE_URL=http://172.28.0.10:11434
-      - POSTGRES_HOST=172.28.0.30
+      - OLLAMA_BASE_URL=http://bd_ollama:11434
+      - POSTGRES_HOST=bd_database
       - POSTGRES_PORT=5432
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -72,19 +79,17 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 10s
+      start_period: 1s
   frontend:
     image: bd_frontend:latest
     container_name: bd_frontend
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      args:
-        - VITE_BACKEND_BASE_URL=http://172.28.0.20:8000
     environment:
-      - VITE_BACKEND_BASE_URL=http://172.28.0.20:8000
+      - BACKEND_BASE_URL=http://bd_backend:8000
     ports:
-      - "3000:3000"
+      - "${HOST_FRONTEND_PORT:-3000}:3000"
     networks:
       bd_network:
         ipv4_address: "172.28.0.40"
@@ -100,7 +105,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 10s
+      start_period: 1s
 
 volumes:
   bd_ollama_data:

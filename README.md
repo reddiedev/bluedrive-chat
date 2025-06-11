@@ -56,9 +56,15 @@ cd bluedrive-chat
 ```bash
 cp .env.example .env
 cp .env.example frontend/.env
+cp .env.example backend/.env
 ```
 3. Reserve Host Ports
 Please pause/stop any services running on the following ports to prevent port conflict. Otherwise, please update the `.env` files or the `docker-compose` files
+- `3000` - Frontend React App
+- `8000` - Backend FastAPI Server
+- `11434` - Ollama API
+- `5432` - Postgres Database
+
 4. Start the application stack
 ```bash
 docker compose down -v # remove old containers and volumes, if any
