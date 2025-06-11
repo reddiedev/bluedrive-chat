@@ -46,6 +46,7 @@ The application follows the typical workflow and user experience of most chat ap
 > Please modify use `docker-compose.yml` if you do not have an Nvidia GPU. Otherwise, `docker-compose.nvidia.yml` has a modified `ollama` service with GPU capability provided you have an Nvidia GPU and [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) installed
 
 ### Quickstart via Docker
+
 1. Clone the repository
 ```bash
 git clone https://github.com/reddiedev/bluedrive-chat 
@@ -56,9 +57,17 @@ cd bluedrive-chat
 cp .env.example .env
 cp .env.example frontend/.env
 ```
-3. Start the application stack
+3. Reserve Host Ports
+Please pause/stop any services running on the following ports to prevent port conflict. Otherwise, please update the `.env` files or the `docker-compose` files
+4. Start the application stack
 ```bash
 docker compose down -v # remove old containers and volumes, if any
+
+# recommended: download ollama models first 
+docker compose up --build ollama
+# you can view download progress by running the following commands in a separate terminal
+docker exec -it bd_ollama ollama pull llama3.2:1b
+docker exec -it bd_ollama ollama pull gemma3:1b
 
 # ollama CPU
 docker compose up --build --verbose
@@ -68,7 +77,7 @@ docker compose -f docker-compose.nvidia.yml up --build --verbose
 ```
 > On my machine, it takes roughly ~1 minute to build all services without cache, then around ~5 minutes to download all the models depending on your network speed.
 
-4. On your browser, you can view the app at [http://localhost:3000](http://localhost:3000)
+5. On your browser, you can view the app at [http://localhost:3000](http://localhost:3000)
 
 > [!CAUTION]
 > The first run will take some time, as the models are being downloaded for Ollama
