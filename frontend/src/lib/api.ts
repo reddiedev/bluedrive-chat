@@ -17,7 +17,7 @@ export const getSessions = createServerFn({
   
     const response: AxiosResponse<SessionData[]> = await axios.get(url)
 
-    const sessions = response.data.slice(0, 15)
+    const sessions = response.data.slice(0, 10)
 
     // check if session_id is in the sessions, if not, add it at the top of the list with the title "New Thread"
     if (!sessions.some((session) => session.id === data.session_id)) {
