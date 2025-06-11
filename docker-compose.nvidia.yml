@@ -16,6 +16,12 @@ services:
     networks:
       bd_network:
         ipv4_address: "172.28.0.10"
+    healthcheck:
+      test:  [ "CMD-SHELL", "bash", "-c", "{ printf >&3 'GET / HTTP/1.0\\r\\n\\r\\n'; cat <&3; } 3<>/dev/tcp/localhost/11434 | grep 'Ollama is' || exit 1"  ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
     deploy: # If you do not have an Nvidia GPU, remove this section
       resources:
         reservations:
@@ -23,12 +29,6 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
-    healthcheck:
-      test:  [ "CMD-SHELL", "bash", "-c", "{ printf >&3 'GET / HTTP/1.0\\r\\n\\r\\n'; cat <&3; } 3<>/dev/tcp/localhost/11434 | grep 'Ollama is' || exit 1"  ]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 10s 
   database:
     image: postgres:16
     restart: always
@@ -45,6 +45,11 @@ services:
     volumes:
       - bd_pgdata:/var/lib/postgresql/data
       - ./database/seed.sql:/docker-entrypoint-initdb.d/seed.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
  
   backend:
     image: bd_backend:latest
@@ -65,13 +70,15 @@ services:
       bd_network:
         ipv4_address: "172.28.0.20"
     depends_on:
-      - database
-      - ollama
+      database:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 10s
       timeout: 5s
-      retries: 3
+      retries: 10
       start_period: 10s
   frontend:
     image: bd_frontend:latest
@@ -89,14 +96,17 @@ services:
       bd_network:
         ipv4_address: "172.28.0.40"
     depends_on:
-      - backend
-      - ollama
-      - database
+      backend:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+      database:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 10s
       timeout: 5s
-      retries: 3
+      retries: 10
       start_period: 10s
 
 volumes:
