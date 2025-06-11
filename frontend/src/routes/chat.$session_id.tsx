@@ -161,37 +161,7 @@ function ThreadsSidebar() {
   )
 }
 
-function NewThreadContainer() {
-  const { username } = Route.useSearch()
 
-
-  return (<div className='flex flex-col grow pb-40'>
-
-    <div className='flex flex-col items-start justify-center h-full'>
-      <h1 className='text-4xl font-bold'>Hi {username}, how may I help you today?</h1>
-      <div className='flex flex-wrap gap-2 mt-2'>
-        <Button variant='outline' className='cursor-pointer rounded-xl px-8 py-2 h-auto'>
-          <StarsIcon />
-          Create
-        </Button>
-        <Button variant='outline' className='cursor-pointer rounded-xl px-4 py-2 h-auto'>
-          <NewspaperIcon />
-          Explore
-        </Button>
-        <Button variant='outline' className='cursor-pointer rounded-xl px-4 py-2 h-auto'>
-          <Code2Icon />
-          Code
-        </Button>
-        <Button variant='outline' className='cursor-pointer rounded-xl px-4 py-2 h-auto'>
-          <BookOpenIcon />
-          Learn
-        </Button>
-      </div>
-    </div>
-
-
-  </div>)
-}
 
 function MessagesContainer({ messages }: { messages: MessageData[] }) {
   const { username } = Route.useSearch()
@@ -389,7 +359,55 @@ function ChatContainer({ open }: { open: boolean }) {
   return (
     <main ref={mainRef} className={cn('flex relative grow dark:bg-neutral-900 flex-col items-center justify-center rounded-lg transition-all duration-300 scrollbar scrollbar-track-neutral-900 scrollbar-thumb-neutral-500 ease-in-out overflow-y-scroll', open && "mt-4 ml-4")}>
       <div className="flex flex-col max-w-[50rem] w-[50rem] h-full">
-        {isSessionFetched && messages.length == 0 && <NewThreadContainer />}
+        {isSessionFetched && messages.length == 0 &&
+          <div className='flex flex-col grow pb-40'>
+            <div className='flex flex-col items-start justify-center h-full'>
+              <h1 className='text-4xl font-bold'>Hi {username}, how may I help you today?</h1>
+              <p className='text-neutral-500 pt-5'>
+                Here are some examples of what you can ask me:
+              </p>
+              <div className='flex flex-wrap gap-2 mt-2'>
+                <Button variant='outline' className='cursor-pointer rounded-xl px-8 py-2 h-auto' onClick={() => {
+                  form.setValue("content", "Compose a poem about the changing seasons.")
+                  const textarea = document.getElementById('message-input') as HTMLTextAreaElement
+                  textarea?.focus()
+                  adjustTextareaHeight()
+                }}>
+                  <StarsIcon />
+                  Create
+                </Button>
+                <Button variant='outline' className='cursor-pointer rounded-xl px-4 py-2 h-auto' onClick={() => {
+                  form.setValue("content", "What are some unique travel destinations in the Philippines?")
+                  const textarea = document.getElementById('message-input') as HTMLTextAreaElement
+                  textarea?.focus()
+                  adjustTextareaHeight()
+                }}>
+                  <NewspaperIcon />
+                  Explore
+                </Button>
+                <Button variant='outline' className='cursor-pointer rounded-xl px-4 py-2 h-auto' onClick={() => {
+                  form.setValue("content", "Write a Python script to sort a list of numbers.")
+                  const textarea = document.getElementById('message-input') as HTMLTextAreaElement
+                  textarea?.focus()
+                  adjustTextareaHeight()
+                }}>
+                  <Code2Icon />
+                  Code
+                </Button>
+                <Button variant='outline' className='cursor-pointer rounded-xl px-4 py-2 h-auto' onClick={() => {
+                  form.setValue("content", "Teach me the basics of machine learning.")
+                  const textarea = document.getElementById('message-input') as HTMLTextAreaElement
+                  textarea?.focus()
+                  adjustTextareaHeight()
+                }}>
+                  <BookOpenIcon />
+                  Learn
+                </Button>
+              </div>
+            </div>
+
+
+          </div>}
         {isSessionFetched && messages.length > 0 && <MessagesContainer messages={messages} />}
         <div className='fixed bottom-0 z-40 max-w-[50rem] w-full'>
           <Form {...form}>
