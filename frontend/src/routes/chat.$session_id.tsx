@@ -22,6 +22,7 @@ import { Textarea } from '~/components/ui/textarea'
 import { getSession, getSessions, getModels, streamCompletion } from '~/lib/api'
 import { MessageData } from '~/lib/api.types'
 import { cn } from '~/lib/utils'
+import ModelsChecker from '~/components/chat/models-checker'
 
 
 export const Route = createFileRoute('/chat/$session_id')({
@@ -498,6 +499,7 @@ function RouteComponent() {
   const [open, setOpen] = useState(true)
   return (
     <SidebarProvider open={open} onOpenChange={setOpen}>
+      <ModelsChecker />
 
       <div className='bg-neutral-950 relative w-full font-display antialiased scroll-smooth text-white h-screen max-h-screen overflow-hidden flex flex-row'>
         <SidebarTrigger className='absolute top-3 left-4 z-40 bg-neutral-950 p-4 rounded-lg shadow-lg cursor-pointer' />
