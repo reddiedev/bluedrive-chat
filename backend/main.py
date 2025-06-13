@@ -233,7 +233,9 @@ async def stream(request: ChatRequest, background_tasks: BackgroundTasks):
     Returns:
         StreamingResponse: A streaming response containing the generated response.
     """
-    print(f"Stream Chat Request: #{request.session_id} from @{request.name}")
+    print(
+        f"Stream Chat Request: #{request.session_id} from @{request.name}\n{request.content}"
+    )
 
     # INPUT VALIDATION
     if not is_session_id_valid(request.session_id):
@@ -265,6 +267,8 @@ async def stream(request: ChatRequest, background_tasks: BackgroundTasks):
         [SystemMessage(content=chat_sys_msg.content)] + prev_messages + [new_usr_msg]
     )
 
+    print(f"Messages:\n{messages}")
+
     model_with_streaming = OllamaLLM(
         model=request.model,
         base_url=os.getenv("OLLAMA_BASE_URL"),
@@ -273,12 +277,37 @@ async def stream(request: ChatRequest, background_tasks: BackgroundTasks):
 
     # RESPONSE STREAMING
     full_response = ""
+    buffer = ""
+    in_think_block = False
 
     async def stream_response():
-        nonlocal full_response
+        nonlocal full_response, buffer, in_think_block
         async for token in model_with_streaming.astream(messages):
+            buffer += token
             full_response += token
-            yield token
+
+            # Check for think tags
+            if "<think>" in buffer and not in_think_block:
+                # Find the start of the think block
+                think_start = buffer.find("<think>")
+                # Output everything before the think block
+                if think_start > 0:
+                    yield buffer[:think_start]
+                buffer = buffer[think_start:]
+                in_think_block = True
+
+            # Check for end of think block
+            if "</think>" in buffer and in_think_block:
+                # Find the end of the think block
+                think_end = buffer.find("</think>") + len("</think>")
+                # Remove the think block from buffer
+                buffer = buffer[think_end:]
+                in_think_block = False
+
+            # If we're not in a think block and have content, yield it
+            if not in_think_block and buffer:
+                yield buffer
+                buffer = ""
 
     response = StreamingResponse(
         stream_response(), media_type="text/plain; charset=utf-8"
@@ -289,6 +318,7 @@ async def stream(request: ChatRequest, background_tasks: BackgroundTasks):
         new_ai_msg = AIMessage(
             content=full_response, id=generate_message_id(), name="Assistant"
         )
+        print(f"New AI Message:\n{new_ai_msg}")
         chat_history.add_messages([new_usr_msg, new_ai_msg])
 
     background_tasks.add_task(store_messages)
