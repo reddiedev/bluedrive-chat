@@ -21,7 +21,7 @@ import { Textarea } from '~/components/ui/textarea'
 
 import { getSession, getSessions, getModels, streamCompletion } from '~/lib/api'
 import { MessageData } from '~/lib/api.types'
-import { cn } from '~/lib/utils'
+import { cn, randomUUID } from '~/lib/utils'
 import ModelsChecker from '~/components/chat/models-checker'
 
 
@@ -96,7 +96,7 @@ function ThreadsSidebar() {
   }, [handleNewThread])
 
   async function handleNewThread() {
-    const session_id = crypto.randomUUID()
+    const session_id = randomUUID()
     navigate({ to: '/chat/$session_id', params: { session_id }, search: { username } })
   }
 
@@ -279,7 +279,7 @@ function ChatContainer({ open }: { open: boolean }) {
 
     // render latest message
     setMessages(prevMessages => [...prevMessages, {
-      id: crypto.randomUUID(),
+      id: randomUUID(),
       role: "user",
       content: content,
       name: username,
@@ -287,7 +287,7 @@ function ChatContainer({ open }: { open: boolean }) {
     }])
 
     // Create a temporary message for the assistant's response
-    const tempMessageId = crypto.randomUUID()
+    const tempMessageId = randomUUID()
     setMessages(prevMessages => [...prevMessages, {
       id: tempMessageId,
       role: "assistant",

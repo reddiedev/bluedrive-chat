@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/com
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '~/components/ui/form'
 import { Input } from '~/components/ui/input'
 import ModelsChecker from '~/components/chat/models-checker'
+import { randomUUID } from '~/lib/utils'
 
 export const Route = createFileRoute('/')({
   component: Home,
@@ -28,7 +29,7 @@ function UsernameForm() {
   function onSubmit(values: z.infer<typeof usernameFormSchema>) {
     // generate uuid v4 
     const { username } = values
-    const session_id = crypto.randomUUID()
+    const session_id = randomUUID()
     navigate({ to: '/chat/$session_id', params: { session_id }, search: { username } })
   }
 
