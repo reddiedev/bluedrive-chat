@@ -7,7 +7,7 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml* ./
 
 RUN npm install -g corepack@latest
-RUN corepack enable pnpm && corepack prepare pnpm@latest --activate && pnpm i --frozen-lockfile
+RUN corepack enable pnpm && corepack prepare pnpm@9 --activate && pnpm i --frozen-lockfile
 
 COPY . .
 
