@@ -205,8 +205,8 @@ function ChatContainer({ open }: { open: boolean }) {
   const mainRef = useRef<HTMLDivElement>(null)
 
   if (models.length == 0) {
-    toast.error("No Ollama models found", {
-      description: "Please check your backend configuration and make sure that Ollama is running and that the models are loaded.",
+    toast.error("No models found", {
+      description: "Please check your backend configuration and make sure that the LLM provider is reachable and that the models are configured.",
       duration: 10000,
       id: "no-models-found",
 
@@ -268,7 +268,7 @@ function ChatContainer({ open }: { open: boolean }) {
     resolver: zodResolver(newMessageSchema),
     defaultValues: {
       content: "",
-      model: models.length > 0 ? models[0].model : "gemma3:1b",
+      model: models.length > 0 ? models[0].model : "",
     },
   })
 
