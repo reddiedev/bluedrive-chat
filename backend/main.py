@@ -1,9 +1,7 @@
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 import uvicorn
 from dotenv import load_dotenv
-from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
-from langchain_ollama.llms import OllamaLLM
 from langchain_postgres import PostgresChatMessageHistory
 import os
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,7 +10,13 @@ from urllib.parse import unquote
 
 from lib.utils import generate_message_id, is_session_id_valid
 from lib.types import ChatRequest, Session, MessageRecord, Message
-from lib.ollama import get_ollama_models, get_ollama_models_names, get_session_title
+from lib.llm import (
+    get_models,
+    get_models_names,
+    get_chat_model,
+    get_session_title,
+    extract_text,
+)
 from lib.prompts import chat_sys_msg
 from lib.database import (
     get_session_by_id,
@@ -59,15 +63,15 @@ async def health():
 
 
 @app.get("/models")
-async def get_models():
+async def get_models_endpoint():
     """
-    Retrieves the list of available models from the Ollama backend for use in the frontend
+    Retrieves the list of available models from the configured LLM provider for use in the frontend
 
     Returns:
         list[dict]: A list of available model dictionaries.
     """
     try:
-        return get_ollama_models()
+        return get_models()
     except Exception as e:
         print(f"Error in get_models: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
@@ -183,7 +187,7 @@ async def chat(request: ChatRequest):
     if not is_session_id_valid(request.session_id):
         raise HTTPException(status_code=400, detail="Invalid session ID")
 
-    if request.model not in get_ollama_models_names():
+    if request.model not in get_models_names():
         raise HTTPException(status_code=400, detail="Invalid model")
 
     # SESSION HANDLING
@@ -203,15 +207,9 @@ async def chat(request: ChatRequest):
     new_usr_msg = HumanMessage(
         content=request.content, id=generate_message_id(), name=request.name
     )
-    prompt = ChatPromptTemplate.from_messages(
-        [chat_sys_msg] + prev_messages + [new_usr_msg]
-    )
-    model = OllamaLLM(
-        model=request.model,
-        base_url=os.getenv("OLLAMA_BASE_URL"),
-    )
-    chain = prompt | model
-    response = chain.invoke({"content": request.content})
+    messages = [chat_sys_msg] + prev_messages + [new_usr_msg]
+    model = get_chat_model(request.model)
+    response = extract_text(model.invoke(messages).content)
     new_ai_msg = AIMessage(content=response, id=generate_message_id(), name="Assistant")
 
     # STORE MESSAGES
@@ -241,7 +239,7 @@ async def stream(request: ChatRequest, background_tasks: BackgroundTasks):
     if not is_session_id_valid(request.session_id):
         raise HTTPException(status_code=400, detail="Invalid session ID")
 
-    if request.model not in get_ollama_models_names():
+    if request.model not in get_models_names():
         raise HTTPException(status_code=400, detail="Invalid model")
 
     # SESSION HANDLING
@@ -269,11 +267,7 @@ async def stream(request: ChatRequest, background_tasks: BackgroundTasks):
 
     print(f"Messages:\n{messages}")
 
-    model_with_streaming = OllamaLLM(
-        model=request.model,
-        base_url=os.getenv("OLLAMA_BASE_URL"),
-        streaming=True,
-    )
+    model_with_streaming = get_chat_model(request.model, streaming=True)
 
     # RESPONSE STREAMING
     full_response = ""
@@ -282,7 +276,11 @@ async def stream(request: ChatRequest, background_tasks: BackgroundTasks):
 
     async def stream_response():
         nonlocal full_response, buffer, in_think_block
-        async for token in model_with_streaming.astream(messages):
+        async for chunk in model_with_streaming.astream(messages):
+            token = extract_text(chunk.content)
+            if not token:
+                continue
+
             buffer += token
             full_response += token
 
@@ -332,8 +330,13 @@ def validate_env_vars():
 
     Raises ValueError if any required environment variable is not set.
     """
-    if not os.getenv("OLLAMA_BASE_URL"):
-        raise ValueError("OLLAMA_BASE_URL is not set")
+    provider = os.getenv("LLM_PROVIDER", "openai").lower()
+    if provider == "ollama":
+        if not os.getenv("OLLAMA_BASE_URL"):
+            raise ValueError("OLLAMA_BASE_URL is not set")
+    else:
+        if not os.getenv("OPENAI_API_KEY"):
+            raise ValueError("OPENAI_API_KEY is not set")
     if not os.getenv("POSTGRES_HOST"):
         raise ValueError("POSTGRES_HOST is not set")
     if not os.getenv("POSTGRES_PORT"):

@@ -8,6 +8,7 @@ dependencies = [
     "fastapi[standard]>=0.115.12",
     "langchain-community>=0.3.21",
     "langchain-ollama>=0.3.3",
+    "langchain-openai>=0.3.16",
     "langchain-postgres>=0.0.14",
     "psycopg>=3.2.9",
     "pytest>=8.4.0",

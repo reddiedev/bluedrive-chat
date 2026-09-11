@@ -28,6 +28,7 @@ langchain==0.3.25
 langchain-community==0.3.24
 langchain-core==0.3.64
 langchain-ollama==0.3.3
+langchain-openai==0.3.16
 langchain-postgres==0.0.14
 langchain-text-splitters==0.3.8
 langsmith==0.3.45

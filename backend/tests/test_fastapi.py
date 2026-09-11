@@ -4,6 +4,7 @@ import time
 import uuid
 from dotenv import load_dotenv
 from lib.database import sync_connection
+from lib.llm import get_default_model
 import contextlib
 
 load_dotenv()
@@ -13,7 +14,7 @@ client = TestClient(app)
 # Test data
 VALID_SESSION_ID = str(uuid.uuid4())
 TEST_USERNAME = "testuser"
-TEST_MODEL = "gemma3:1b"  # Using the default model from types.py
+TEST_MODEL = get_default_model()
 
 
 # Database transaction handling
