@@ -6,7 +6,7 @@ __Bard__ is an offline, full-stack AI chatbot application designed as a showcase
 ## **Features**
 
 - 💻 **Modern Frontend** – Built with React (Vite), TanStack Start, TailwindCSS, and Shadcn UI.
-- 🔒 **Offline** – Secure and Local LLM via Ollama
+- 🔌 **Pluggable LLM** – Any OpenAI-compatible API (e.g. Fireworks AI) or a local Ollama server
 - 💾 **Persistent Chat** – Session Handling and Conversation History via langchain-postgres
 - 🚀 **Chat Streaming** – Chat completions are streamed from server for UX
 - 🐳 **Fully Containerized** – Easy to setup and run with Docker Compose
@@ -15,7 +15,7 @@ __Bard__ is an offline, full-stack AI chatbot application designed as a showcase
 ![Tech Stack](/media/stack.png?raw=true)
 
 - **Database**: Postgres (Dockerized)
-- **LLM**: Ollama (via LangChain)
+- **LLM**: OpenAI-compatible API (e.g. Fireworks AI) or Ollama (via LangChain)
 - **Backend**: FastAPI (Python)
 - **Frontend**: React (Vite, TanStack Start), TailwindCSS, Shadcn UI
 - **Deployment**: Docker & Docker Compose
@@ -37,12 +37,12 @@ The application follows the typical workflow and user experience of most chat ap
 ### Requirements
 
 - [Docker](https://docs.docker.com/engine/install/ubuntu/) 
-- [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
+- [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) (only for the optional Ollama GPU profile)
 - [Python](https://www.python.org/)
 - [Node.js](https://nodejs.org/en)
 
 > [!Important]
-> Please modify use `docker-compose.yml` if you do not have an Nvidia GPU. Otherwise, `docker-compose.nvidia.yml` has a modified `ollama` service with GPU capability provided you have an Nvidia GPU and [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) installed
+> The default LLM provider is an OpenAI-compatible API (Fireworks AI running `deepseek-v4p1-flash`). Set your `OPENAI_API_KEY` in `.env`. To run fully local instead, set `LLM_PROVIDER=ollama` and start the optional Ollama profile as described below. `docker-compose.nvidia.yml` adds GPU support to that optional Ollama service.
 
 ### Quickstart via Docker
 
@@ -51,49 +51,45 @@ The application follows the typical workflow and user experience of most chat ap
 git clone https://github.com/reddiedev/bluedrive-chat 
 cd bluedrive-chat
 ```
-2. Load the default environment variables 
+2. Load the default environment variables and add your API key
 ```bash
 cp .env.example .env
 cp .env.example frontend/.env
 cp .env.example backend/.env
+# then set OPENAI_API_KEY (and OPENAI_MODEL/OPENAI_BASE_URL if not using the defaults)
 ```
 3. Reserve Host Ports
 Please pause/stop any services running on the following ports to prevent port conflict. Otherwise, please update the `.env` files or the `docker-compose` files
 - `3000` - Frontend React App
 - `8000` - Backend FastAPI Server
-- `11434` - Ollama API
 - `5432` - Postgres Database
+- `11434` - Ollama API (only when using the optional `ollama` profile)
 
 4. Start the application stack
 ```bash
 docker compose down -v # remove old containers and volumes, if any
 
-# recommended: download ollama models first 
-docker compose up --build ollama
-
-# you can view download progress by running the following commands in a separate terminal
-docker exec -it bd_ollama ollama pull qwen3:0.6b
-docker exec -it bd_ollama ollama pull gemma3:1b
-
-# ollama CPU
+# default: OpenAI-compatible provider (Fireworks AI)
 docker compose up --build
 
-# ollama Nvidia GPU
-docker compose -f docker-compose.nvidia.yml up --build
+# optional: local Ollama instead
+# (set LLM_PROVIDER=ollama in .env first)
+docker compose --profile ollama up --build
 ```
-> On my machine, it takes roughly ~1 minute to build all services without cache, then around ~5 minutes to download all the models depending on your network speed.
+> On my machine, it takes roughly ~1 minute to build all services without cache.
 
 5. On your browser, you can view the app at [http://localhost:3000](http://localhost:3000)
 
-> [!CAUTION]
-> The first run will take some time, as the models are being downloaded for Ollama. Additionally, please allocate `~10 GB` of system space for the containers (the bulk of it is taken up by Ollama)
+> [!NOTE]
+> The Ollama profile downloads its models on first start, which can take a few minutes and `~10 GB` of disk space. When using the default OpenAI-compatible provider, no local models are downloaded.
 
 
 
 ### Building Locally
-You can run the `database` and `ollama` services stand-alone for local testing
+You can run the `database` service stand-alone for local testing. Add the optional Ollama profile if you want a local LLM:
 ```bash
-docker compose up -d --build database ollama
+docker compose up -d --build database
+docker compose --profile ollama up -d --build ollama
 ```
 #### FastAPI Backend
 1. Install Python 3.12 on your Local machine

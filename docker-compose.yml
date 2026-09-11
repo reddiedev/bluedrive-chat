@@ -2,6 +2,7 @@ services:
   ollama:
     image: bd_ollama:latest
     container_name: bd_ollama
+    profiles: ["ollama"]
     build:
       context: ./ollama        
       dockerfile: Dockerfile
@@ -53,6 +54,10 @@ services:
     ports:
       - "${HOST_BACKEND_PORT:-8000}:8000"
     environment:
+      - LLM_PROVIDER=${LLM_PROVIDER:-openai}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-https://api.fireworks.ai/inference/v1}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL:-accounts/fireworks/models/deepseek-v4p1-flash}
       - OLLAMA_BASE_URL=http://bd_ollama:11434
       - POSTGRES_HOST=bd_database
       - POSTGRES_PORT=5432
@@ -64,8 +69,6 @@ services:
         ipv4_address: "172.28.0.20"
     depends_on:
       database:
-        condition: service_healthy
-      ollama:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
@@ -89,8 +92,6 @@ services:
         ipv4_address: "172.28.0.40"
     depends_on:
       backend:
-        condition: service_healthy
-      ollama:
         condition: service_healthy
       database:
         condition: service_healthy
