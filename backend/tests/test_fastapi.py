@@ -2,14 +2,25 @@ from fastapi.testclient import TestClient
 from main import app
 import time
 import uuid
+import pytest
 from dotenv import load_dotenv
-from lib.database import sync_connection
+from lib.database import get_connection
 from lib.llm import get_default_model
 import contextlib
 
 load_dotenv()
 
 client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def disable_rate_limiting(monkeypatch):
+    """Keep the general endpoint tests deterministic across repeated runs.
+
+    Rate limiting is exercised on its own in tests/test_rate_limit.py.
+    """
+    monkeypatch.setenv("RATE_LIMIT_MAX_MESSAGES", "0")
+
 
 # Test data
 VALID_SESSION_ID = str(uuid.uuid4())
@@ -21,11 +32,12 @@ TEST_MODEL = get_default_model()
 @contextlib.contextmanager
 def transaction():
     """Context manager for database transactions"""
+    conn = get_connection()
     try:
         yield
-        sync_connection.commit()
+        conn.commit()
     except Exception:
-        sync_connection.rollback()
+        conn.rollback()
         raise
 
 

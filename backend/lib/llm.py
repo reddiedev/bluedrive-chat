@@ -1,4 +1,5 @@
 import os
+import re
 import requests
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage
@@ -50,13 +51,63 @@ def get_chat_model(model: str, streaming: bool = False):
     )
 
 
+_VERSION_RE = re.compile(r"^v(\d+)(?:p(\d+))?$", re.IGNORECASE)
+_SIZE_RE = re.compile(r"^[a-z]?\d+(?:\.\d+)?(?:x\d+)?b$", re.IGNORECASE)
+_ACRONYMS = {"gpt": "GPT", "oss": "OSS", "ai": "AI", "llm": "LLM", "moe": "MoE", "rag": "RAG"}
+
+
+def _default_display_name(model_id: str) -> str:
+    """
+    Readable name for a provider model id, used when none is configured.
+    Overridable per model via `OPENAI_MODELS` (`model-id=Display name`).
+
+    `accounts/fireworks/models/deepseek-v4p1-flash` -> `Deepseek V4.1 Flash`
+    `accounts/fireworks/models/llama-v3p1-8b-instruct` -> `Llama V3.1 8B Instruct`
+    """
+    slug = model_id.rstrip("/").rsplit("/", 1)[-1]
+    words = []
+    for token in re.split(r"[-_]", slug):
+        if not token:
+            continue
+        version = _VERSION_RE.match(token)
+        if version:
+            point = f".{version.group(2)}" if version.group(2) else ""
+            words.append(f"V{version.group(1)}{point}")
+        elif _SIZE_RE.match(token):
+            words.append(token.upper())
+        else:
+            words.append(_ACRONYMS.get(token.lower(), token.capitalize()))
+    return " ".join(words) or model_id
+
+
+def _parse_openai_models(configured: str) -> list[dict]:
+    """
+    Parses `OPENAI_MODELS`, where each comma-separated entry is either
+    `model` or `model=Display name`.
+    """
+    parsed = []
+    for entry in configured.split(","):
+        entry = entry.strip()
+        if not entry:
+            continue
+        model_id, _, label = entry.partition("=")
+        model_id = model_id.strip()
+        label = label.strip()
+        parsed.append(
+            {"name": label or _default_display_name(model_id), "model": model_id}
+        )
+    return parsed
+
+
 def get_models() -> list[dict]:
     """
     Retrieves the available models for the configured provider in a normalized
-    `{"name": ..., "model": ...}` shape used by the frontend.
+    `{"name": ..., "model": ...}` shape used by the frontend. `model` is the id
+    sent to the provider; `name` is what the interface displays.
 
     For the OpenAI-compatible provider, the models are taken from the optional
     `OPENAI_MODELS` (comma-separated) env var, falling back to `OPENAI_MODEL`.
+    Each entry may carry a display name after `=`.
     """
     if get_provider() == "ollama":
         response = requests.get(
@@ -73,12 +124,11 @@ def get_models() -> list[dict]:
         ]
 
     configured = os.getenv("OPENAI_MODELS")
-    names = (
-        [name.strip() for name in configured.split(",") if name.strip()]
-        if configured
-        else [get_default_model()]
-    )
-    return [{"name": name, "model": name} for name in names]
+    if configured:
+        return _parse_openai_models(configured)
+
+    model_id = get_default_model()
+    return [{"name": _default_display_name(model_id), "model": model_id}]
 
 
 def get_models_names() -> list[str]:

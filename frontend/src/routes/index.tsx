@@ -1,85 +1,109 @@
-import { zodResolver } from '@hookform/resolvers/zod'
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { useForm } from 'react-hook-form'
-import { z } from 'zod'
+import { Link, createFileRoute } from '@tanstack/react-router'
+import { useEffect, useState } from 'react'
+import { BardMark } from '~/components/bard-mark'
+import { RecitationTrace } from '~/components/chat/recitation-trace'
+import { ThemeSwitch } from '~/components/theme-switch'
 import { Button } from '~/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '~/components/ui/form'
-import { Input } from '~/components/ui/input'
-import ModelsChecker from '~/components/chat/models-checker'
-import { randomUUID } from '~/lib/utils'
+import { usePrefersReducedMotion } from '~/hooks/use-prefers-reduced-motion'
 
 export const Route = createFileRoute('/')({
-  component: Home,
+  component: Landing,
 })
 
-const usernameFormSchema = z.object({
-  username: z.string().min(1, "Username cannot be empty").max(20, "Username is too long"),
-})
+const THESIS = 'Every word you say here,\nstays in this room.'
 
-function UsernameForm() {
-  const navigate = useNavigate()
-  const form = useForm<z.infer<typeof usernameFormSchema>>({
-    resolver: zodResolver(usernameFormSchema),
-    defaultValues: {
-      username: "",
-    },
-  })
+/** Types the thesis once, driving the recitation trace as it goes. */
+function useRecitation(text: string, speed = 42, delay = 450) {
+  const reduced = usePrefersReducedMotion()
+  const [count, setCount] = useState(0)
+  const [started, setStarted] = useState(false)
 
-  function onSubmit(values: z.infer<typeof usernameFormSchema>) {
-    // generate uuid v4 
-    const { username } = values
-    const session_id = randomUUID()
-    navigate({ to: '/chat/$session_id', params: { session_id }, search: { username } })
+  useEffect(() => {
+    if (reduced) {
+      setCount(text.length)
+      return
+    }
+    const timer = setTimeout(() => setStarted(true), delay)
+    return () => clearTimeout(timer)
+  }, [reduced, delay, text.length])
+
+  useEffect(() => {
+    if (!started || count >= text.length) return
+    const timer = setTimeout(() => setCount((c) => c + 1), speed)
+    return () => clearTimeout(timer)
+  }, [started, count, text.length, speed])
+
+  return {
+    typed: text.slice(0, count),
+    typing: started && count < text.length,
+    pulse: count,
   }
-
-  return (
-    <Card className='min-w-[30rem]'>
-      <CardHeader>
-        <CardTitle className='text-2xl font-semibold flex items-center'>
-          <span >Welcome to</span> <Link to="/" className='flex items-center hover:text-neutral-300 transition-colors ease-in-out duration-300'>
-            <img src="/logo.png" alt="Bard" className='ml-2 mr-1 size-6' height={512} width={512} /> Bard
-          </Link>
-        </CardTitle>
-        <CardDescription className='text-neutral-500 font-normal text-sm'>
-          Please enter your username to continue
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col space-y-8">
-            <FormField
-              control={form.control}
-              name="username"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Username</FormLabel>
-                  <FormControl>
-                    <Input id='username-input' placeholder="User" {...field} autoComplete="off" />
-                  </FormControl>
-                  <FormDescription>
-                    This is your username that will be used to identify you in the chat.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button id='continue-button' type="submit" className='cursor-pointer'>Continue</Button>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
-  )
 }
 
-function Home() {
+function Landing() {
+  const { typed, typing, pulse } = useRecitation(THESIS)
 
   return (
-    <div className="bg-neutral-950 w-full font-display text-white min-h-screen h-auto flex flex-col">
-      <ModelsChecker />
-      <section className='flex flex-col items-center justify-center h-screen'>
-        <UsernameForm />
-      </section>
+    <div className="bg-background text-foreground flex min-h-svh flex-col">
+      <header className="border-border flex h-16 items-center justify-between border-b px-6 sm:px-10">
+        <Link to="/" className="flex items-center gap-2 text-lg font-semibold tracking-tight">
+          <BardMark className="size-5 text-foreground" />
+          Bard
+        </Link>
+        <ThemeSwitch />
+      </header>
+
+      <main className="flex flex-1 flex-col justify-center px-6 py-16 sm:px-10">
+        <div className="mx-auto w-full max-w-4xl">
+          <p className="text-muted-foreground font-mono text-[11px] tracking-[0.22em] uppercase">
+            Offline · on your machine
+          </p>
+
+          <h1 className="font-display mt-6 text-4xl leading-[1.05] font-light tracking-tight whitespace-pre-line sm:text-6xl lg:text-7xl">
+            {typed}
+            {typing && (
+              <span
+                aria-hidden
+                className="bg-signal ml-1 inline-block h-[0.8em] w-[3px] translate-y-[0.02em] animate-pulse align-baseline"
+              />
+            )}
+          </h1>
+
+          <RecitationTrace
+            active={typing}
+            pulse={pulse}
+            className="mt-10 h-8 w-full max-w-xl text-signal"
+          />
+
+          <p className="font-display text-muted-foreground mt-10 max-w-lg text-lg leading-relaxed">
+            Bard answers with a model running on your own hardware — or any endpoint you point it
+            at — and keeps each thread in your own database. Nothing else hears it.
+          </p>
+
+          <div className="mt-14 flex items-center gap-4">
+            <span className="text-muted-foreground font-mono text-[11px] tracking-[0.22em] uppercase">
+              the door
+            </span>
+            <span className="bg-border h-px flex-1" />
+          </div>
+
+          <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3">
+            <Button asChild size="lg">
+              <Link to="/home">Step inside</Link>
+            </Button>
+            <span className="text-muted-foreground font-mono text-xs">
+              No account? Signing up takes a minute.
+            </span>
+          </div>
+        </div>
+      </main>
+
+      <footer className="border-border flex flex-wrap items-center justify-between gap-3 border-t px-6 py-6 sm:px-10">
+        <p className="text-muted-foreground font-mono text-xs">
+          Ollama · any OpenAI-compatible API · Postgres
+        </p>
+        <p className="text-muted-foreground font-mono text-xs">An AI engineering showcase</p>
+      </footer>
     </div>
   )
 }
