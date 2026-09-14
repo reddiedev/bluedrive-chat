@@ -6,11 +6,14 @@ import { Fragment, useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { z } from 'zod'
+import { BardMark } from '~/components/bard-mark'
 import { MessageBox } from '~/components/chat/messages'
+import { RecitationTrace, ThreadFingerprint } from '~/components/chat/recitation-trace'
+import { ThemeSwitch } from '~/components/theme-switch'
 
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar'
 import { Button } from '~/components/ui/button'
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '~/components/ui/form'
+import { Form, FormControl, FormField, FormItem, FormMessage } from '~/components/ui/form'
 import { Input } from '~/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select'
 import { Separator } from '~/components/ui/separator'
@@ -54,6 +57,7 @@ function ThreadsSidebar() {
   const { user } = Route.useRouteContext()
   const username = user.email ?? 'User'
   const { session_id } = Route.useParams()
+  const [query, setQuery] = useState('')
   const { data: sessions } = useQuery({
     queryKey: ['sessions', username, session_id],
     queryFn: () => getSessions({ data: { name: encodeURIComponent(username), session_id } }),
@@ -65,6 +69,10 @@ function ThreadsSidebar() {
   })
 
   const navigate = useNavigate()
+
+  const visibleSessions = (sessions ?? []).filter((session) =>
+    session.title.toLowerCase().includes(query.trim().toLowerCase()),
+  )
 
   const isEmoji = (str: string) => {
     const emojiRegex = /[\p{Emoji}\u{1F3FB}-\u{1F3FF}\u{1F9B0}-\u{1F9B3}]/u;
@@ -97,49 +105,51 @@ function ThreadsSidebar() {
   }
 
   return (
-    <Sidebar className='dark:bg-neutral-950 bg-neutral-950 z-10 '>
+    <Sidebar className='border-sidebar-border border-r'>
 
-      <SidebarHeader className='pt-4' >
-        <Link to="/" className='px-4 gap-2 flex flex-row justify-center items-center font-bold'>
-          <img src="/logo.png" alt="Bard" className='size-5' height={512} width={512} />
-          <span>Bard</span>
-        </Link>
+      <SidebarHeader className='px-4 pt-5'>
+        <div className='flex items-center justify-between gap-2'>
+          <Link to='/' className='flex flex-row items-center gap-2 font-semibold tracking-tight'>
+            <BardMark className='size-5 text-foreground' />
+            <span>Bard</span>
+          </Link>
+          <SidebarTrigger className='cursor-pointer' />
+        </div>
       </SidebarHeader>
 
 
-      <div className='px-4 pt-2'>
+      <div className='px-4 pt-4'>
         <Button id='new-thread-button' className='w-full cursor-pointer justify-center' onClick={handleNewThread}>
           <MessageCircleIcon />
-          New Thread
+          New thread
         </Button>
       </div>
 
-      <SidebarContent className='dark:bg-neutral-950 bg-neutral-950 text-white px-2'>
+      <SidebarContent className='px-2 pt-4'>
         <SidebarGroup className='px-0'>
-          <div className='flex flex-row items-center gap-1 px-2'>
-            <SearchIcon className='size-4' />
+          <div className='flex flex-row items-center gap-2 px-2'>
+            <SearchIcon className='text-muted-foreground size-4 shrink-0' />
             <Input
-              placeholder='Search your threads...'
-              className='border-none bg-neutral-950 h-auto px-0 py-2 dark:bg-neutral-950 dark:selection:bg-neutral-950 focus-visible:ring-0 '
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder='Search your threads'
+              className='h-auto border-none bg-transparent px-0 py-2 shadow-none focus-visible:ring-0'
               spellCheck={false}
               autoComplete='off'
-            >
-            </Input>
+            />
           </div>
-          <Separator />
-          <SidebarGroupLabel className='text-white'>
-            Threads
+          <SidebarGroupLabel className='text-muted-foreground px-2 font-mono text-[11px] tracking-[0.18em] uppercase'>
+            What the room remembers
           </SidebarGroupLabel>
-          <SidebarGroupContent className='flex flex-col gap-2'>
-            {sessions?.map((session) =>
+          <SidebarGroupContent className='flex flex-col gap-1'>
+            {visibleSessions.map((session) =>
               <SidebarMenuItem key={session.id}>
-                <Link to={`/chat/$session_id`} params={{ session_id: session.id }}>
-                  <SidebarMenuButton asChild>
-                    <Button variant='ghost' className='w-full cursor-pointer justify-start'>
-                      <span className="truncate">{formatTitle(session.title)}</span>
-                    </Button>
-                  </SidebarMenuButton>
-                </Link>
+                <SidebarMenuButton asChild isActive={session.id === session_id}>
+                  <Link to={`/chat/$session_id`} params={{ session_id: session.id }} className='cursor-pointer'>
+                    <ThreadFingerprint seed={`${session.title}:${session.id}`} />
+                    <span className="truncate">{formatTitle(session.title)}</span>
+                  </Link>
+                </SidebarMenuButton>
               </SidebarMenuItem>)}
             {sessions.length === 0 && (
               <Fragment>
@@ -152,24 +162,34 @@ function ThreadsSidebar() {
                 </SidebarMenuItem>
               </Fragment>
             )}
+            {sessions.length > 0 && visibleSessions.length === 0 && (
+              <p className='text-muted-foreground px-2 py-3 text-sm'>
+                No threads match “{query}”.
+              </p>
+            )}
 
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className='py-6 px-4'>
-        <p className='text-neutral-500 text-left text-xs font-mono pb-2'>
-          [cmd/ctrl + /] for new thread
+      <SidebarFooter className='px-4 py-5'>
+        <p className='text-muted-foreground pb-3 font-mono text-[11px] leading-relaxed'>
+          [cmd/ctrl + /] new thread
+          <br />
           [cmd/ctrl + b] toggle sidebar
         </p>
+        <div className='pb-3'>
+          <ThemeSwitch />
+        </div>
+        <Separator className='mb-4' />
         <div className='flex items-center gap-2 justify-between'>
           <div className='flex items-center gap-2 min-w-0'>
             <Avatar className='size-7'>
-              <AvatarImage src='https://cdn.reddie.dev/assets/avatar.jpg' />
+              <AvatarImage src='https://cdn.reddie.dev/assets/avatar.jpg' alt="" />
               <AvatarFallback>?</AvatarFallback>
             </Avatar>
 
-            <span className='truncate'>
+            <span className='truncate text-sm'>
               {username}
             </span>
           </div>
@@ -191,7 +211,7 @@ function ThreadsSidebar() {
 
 function MessagesContainer({ messages }: { messages: MessageData[] }) {
   return (
-    <div className='flex flex-col grow pb-52'>
+    <div className='flex flex-col pb-4'>
       {messages.map((message) => (
         <MessageBox key={message.id} message={message} />
       ))}
@@ -200,12 +220,18 @@ function MessagesContainer({ messages }: { messages: MessageData[] }) {
   )
 }
 
+const SUGGESTIONS = [
+  { Icon: StarsIcon, label: 'Create', prompt: 'Compose a poem about the changing seasons.' },
+  { Icon: NewspaperIcon, label: 'Explore', prompt: 'What are some unique travel destinations in the Philippines?' },
+  { Icon: Code2Icon, label: 'Code', prompt: 'Write a Python script to sort a list of numbers.' },
+  { Icon: BookOpenIcon, label: 'Learn', prompt: 'Teach me the basics of machine learning.' },
+]
+
 function ChatContainer({ open }: { open: boolean }) {
   const { user } = Route.useRouteContext()
   const username = user.email ?? 'User'
   const { session_id } = Route.useParams()
   const { models } = Route.useLoaderData()
-  const mainRef = useRef<HTMLDivElement>(null)
 
   if (models.length == 0) {
     toast.error("No models found", {
@@ -229,6 +255,8 @@ function ChatContainer({ open }: { open: boolean }) {
   })
 
   const [messages, setMessages] = useState<MessageData[]>([])
+  const [streaming, setStreaming] = useState(false)
+  const [pulse, setPulse] = useState(0)
   const isScrollingRef = useRef(false)
 
   const { data: sessionData, isFetched: isSessionFetched } = useQuery({
@@ -237,24 +265,22 @@ function ChatContainer({ open }: { open: boolean }) {
     initialData: { session: initialSession, messages: initialMessages },
   })
 
-  // Scroll to bottom when messages change
+  // The document scrolls, so we scroll the window to the newest message.
   useEffect(() => {
-    if (mainRef.current && !isScrollingRef.current) {
+    if (!isScrollingRef.current) {
       isScrollingRef.current = true
 
       // Use requestAnimationFrame to ensure DOM has updated
       requestAnimationFrame(() => {
-        if (mainRef.current) {
-          mainRef.current.scrollTo({
-            top: mainRef.current.scrollHeight,
-            behavior: 'smooth'
-          })
+        window.scrollTo({
+          top: document.documentElement.scrollHeight,
+          behavior: 'smooth',
+        })
 
-          // Reset scroll lock after animation completes
-          setTimeout(() => {
-            isScrollingRef.current = false
-          }, 300) // Typical duration of smooth scroll
-        }
+        // Reset scroll lock after animation completes
+        setTimeout(() => {
+          isScrollingRef.current = false
+        }, 300) // Typical duration of smooth scroll
       })
     }
   }, [messages])
@@ -278,6 +304,7 @@ function ChatContainer({ open }: { open: boolean }) {
   // get streaming response from backend 
   async function handleMessageSubmit(values: z.infer<typeof newMessageSchema>) {
     form.reset()
+    requestAnimationFrame(adjustTextareaHeight)
     const { content } = values
 
     // render latest message
@@ -300,6 +327,7 @@ function ChatContainer({ open }: { open: boolean }) {
     }])
 
     try {
+      setStreaming(true)
       const response = await streamCompletion({
         data: {
           name: username,
@@ -329,6 +357,7 @@ function ChatContainer({ open }: { open: boolean }) {
         // Convert the Uint8Array to text
         const chunk = new TextDecoder().decode(value)
         accumulatedContent += chunk
+        setPulse(prev => prev + 1)
 
         // Update the message with accumulated content
         setMessages(prevMessages =>
@@ -350,6 +379,8 @@ function ChatContainer({ open }: { open: boolean }) {
         type: 'manual',
         message: error instanceof Error ? error.message : 'Failed to send message'
       })
+    } finally {
+      setStreaming(false)
     }
 
   }
@@ -375,123 +406,111 @@ function ChatContainer({ open }: { open: boolean }) {
     adjustTextareaHeight();
   }, []);
 
+  function useSuggestion(prompt: string) {
+    form.setValue("content", prompt)
+    const textarea = document.getElementById('message-input') as HTMLTextAreaElement
+    textarea?.focus()
+    adjustTextareaHeight()
+  }
+
   return (
-    <main ref={mainRef} className={cn('flex relative grow dark:bg-neutral-900 flex-col items-center justify-center rounded-lg transition-all duration-300 scrollbar scrollbar-track-neutral-900 scrollbar-thumb-neutral-500 ease-in-out overflow-y-scroll', open && "mt-4 ml-4")}>
-      <div className="flex flex-col max-w-[50rem] w-[50rem] h-full">
-        {isSessionFetched && messages.length == 0 &&
-          <div className='flex flex-col grow pb-40'>
-            <div className='flex flex-col items-start justify-center h-full'>
-              <h1 className='text-4xl font-bold'>Hi {username}, how may I help you today?</h1>
-              <p className='text-neutral-500 pt-5'>
-                Here are some examples of what you can ask me:
+    <main className={cn('bg-background relative flex w-full grow flex-col', open && "md:ml-4")}>
+      {/* The document scrolls, so the scrollbar lives at the window edge and
+          keyboard scrolling works. The transcript is centred and width-capped;
+          the composer sticks to the bottom of the viewport. */}
+      <div className='mx-auto flex w-full max-w-[50rem] grow flex-col px-4 pt-10 sm:px-6 md:pt-6'>
+          {isSessionFetched && messages.length == 0 &&
+            <div className='flex flex-1 flex-col justify-center py-16'>
+              <p className='text-muted-foreground font-mono text-[11px] tracking-[0.22em] uppercase'>
+                A new thread
               </p>
-              <div className='flex flex-wrap gap-2 mt-2'>
-                <Button variant='outline' className='cursor-pointer rounded-xl px-8 py-2 h-auto' onClick={() => {
-                  form.setValue("content", "Compose a poem about the changing seasons.")
-                  const textarea = document.getElementById('message-input') as HTMLTextAreaElement
-                  textarea?.focus()
-                  adjustTextareaHeight()
-                }}>
-                  <StarsIcon />
-                  Create
-                </Button>
-                <Button variant='outline' className='cursor-pointer rounded-xl px-4 py-2 h-auto' onClick={() => {
-                  form.setValue("content", "What are some unique travel destinations in the Philippines?")
-                  const textarea = document.getElementById('message-input') as HTMLTextAreaElement
-                  textarea?.focus()
-                  adjustTextareaHeight()
-                }}>
-                  <NewspaperIcon />
-                  Explore
-                </Button>
-                <Button variant='outline' className='cursor-pointer rounded-xl px-4 py-2 h-auto' onClick={() => {
-                  form.setValue("content", "Write a Python script to sort a list of numbers.")
-                  const textarea = document.getElementById('message-input') as HTMLTextAreaElement
-                  textarea?.focus()
-                  adjustTextareaHeight()
-                }}>
-                  <Code2Icon />
-                  Code
-                </Button>
-                <Button variant='outline' className='cursor-pointer rounded-xl px-4 py-2 h-auto' onClick={() => {
-                  form.setValue("content", "Teach me the basics of machine learning.")
-                  const textarea = document.getElementById('message-input') as HTMLTextAreaElement
-                  textarea?.focus()
-                  adjustTextareaHeight()
-                }}>
-                  <BookOpenIcon />
-                  Learn
-                </Button>
+              <h1 className='font-display mt-4 text-3xl font-light leading-tight tracking-tight text-balance sm:text-4xl'>
+                Hi {username}, what are we working on?
+              </h1>
+              <p className='text-muted-foreground mt-4 font-mono text-xs'>
+                Pick a starting point, or just start typing.
+              </p>
+              <div className='mt-6 flex flex-wrap gap-2'>
+                {SUGGESTIONS.map(({ Icon, label, prompt }) => (
+                  <Button
+                    key={label}
+                    variant='outline'
+                    className='h-auto cursor-pointer rounded-full px-4 py-2'
+                    onClick={() => useSuggestion(prompt)}
+                  >
+                    <Icon />
+                    {label}
+                  </Button>
+                ))}
               </div>
-            </div>
+            </div>}
+          {isSessionFetched && messages.length > 0 && <MessagesContainer messages={messages} />}
+      </div>
 
-
-          </div>}
-        {isSessionFetched && messages.length > 0 && <MessagesContainer messages={messages} />}
-        <div className='fixed bottom-0 z-40 max-w-[50rem] w-full'>
-          <p className='text-neutral-500 text-right text-xs font-mono pb-2'>
-            [shift + enter] for new line
-            [enter] to send message
+      <div className='bg-background sticky bottom-0 z-30'>
+        <div className='mx-auto w-full max-w-[50rem] px-4 pt-2 pb-4 sm:px-6'>
+          <p className='text-muted-foreground pb-2 text-right font-mono text-[11px]'>
+            [shift + enter] new line · [enter] send
           </p>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleMessageSubmit)} className="flex flex-col space-y-8 w-full" >
-              <div className="isolate backdrop-blur-sm flex flex-row items-center gap-2 p-2 bg-neutral-800/20 border-[1px] border-b-0 border-neutral-800 rounded-xl rounded-b-none pb-0">
-                <div className="isolate rounded-xl bg-neutral-800/20 border-[1px] border-b-0 border-neutral-800 w-full flex flex-col rounded-b-none pb-0">
-                  <div className="p-2">
-                    <FormField
-                      control={form.control}
-                      name="content"
-                      render={({ field }) => (
-                        <FormItem>
+            <form onSubmit={form.handleSubmit(handleMessageSubmit)} className="w-full" >
+              <div className="bg-card border-border flex flex-col overflow-hidden rounded-[10px] border shadow-sm">
+                <div className="p-2">
+                  <FormField
+                    control={form.control}
+                    name="content"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Textarea
+                            id='message-input'
+                            placeholder="Type a message…"
+                            className="scrollbar-none resize-none border-none bg-transparent px-2 py-2 shadow-none focus-visible:ring-0"
+                            onInput={adjustTextareaHeight}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                form.handleSubmit(handleMessageSubmit)();
+                              }
+                            }}
+                            rows={1}
+                            {...field}
+                            ref={textareaRef}
+                          />
+                        </FormControl>
+                        <FormMessage id='message-input-message' />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="flex items-center justify-between gap-2 px-2 pb-2">
+                  <FormField
+                    control={form.control}
+                    name="model"
+                    render={({ field }) => (
+                      <FormItem>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <Textarea
-                              id='message-input'
-                              placeholder="Type your message..."
-                              className="border-none p-2 scrollbar-none bg-transparent dark:bg-transparent not-[]: px-0 py-2  focus-visible:ring-0 resize-none"
-                              onInput={adjustTextareaHeight}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                  e.preventDefault();
-                                  form.handleSubmit(handleMessageSubmit)();
-                                }
-                              }}
-                              rows={1}
-                              {...field}
-                              ref={textareaRef}
-                            />
+                            <SelectTrigger className="text-muted-foreground border-none bg-transparent shadow-none focus-visible:ring-0">
+                              <SelectValue placeholder="Select a model" />
+                            </SelectTrigger>
                           </FormControl>
-                          <FormMessage id='message-input-message' />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div className="p-2 pt-0 flex justify-between items-center">
-                    <FormField
-                      control={form.control}
-                      name="model"
-                      render={({ field }) => (
-                        <FormItem>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a model" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {models.map((model) => (
-                                <SelectItem key={model.model} value={model.model}>{model.model}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage id='model-input-message' />
-                        </FormItem>
-                      )}
-                    />
-                    <Button size="icon" id='send-message-button' type="submit" className='cursor-pointer' disabled={models.length == 0}>
-                      <ArrowUp />
-                    </Button>
-                  </div>
-
+                          <SelectContent>
+                            {models.map((model) => (
+                              <SelectItem key={model.model} value={model.model}>{model.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage id='model-input-message' />
+                      </FormItem>
+                    )}
+                  />
+                  <Button size="icon" id='send-message-button' type="submit" className='cursor-pointer' disabled={models.length == 0}>
+                    <ArrowUp />
+                  </Button>
+                </div>
+                <div className='border-border/70 border-t'>
+                  <RecitationTrace active={streaming} pulse={pulse} className='h-5 w-full' />
                 </div>
               </div>
 
@@ -509,8 +528,8 @@ function RouteComponent() {
     <SidebarProvider open={open} onOpenChange={setOpen}>
       <ModelsChecker />
 
-      <div className='bg-neutral-950 relative w-full font-display antialiased scroll-smooth text-white h-screen max-h-screen overflow-hidden flex flex-row'>
-        <SidebarTrigger className='absolute top-3 left-4 z-40 bg-neutral-950 p-4 rounded-lg shadow-lg cursor-pointer' />
+      <div className='bg-background text-foreground relative flex min-h-svh w-full flex-row'>
+        <SidebarTrigger className='bg-background fixed top-3 left-3 z-40 shadow-sm md:hidden' />
         <ThreadsSidebar />
         <ChatContainer open={open} />
       </div>
