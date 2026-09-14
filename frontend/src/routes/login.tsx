@@ -3,8 +3,8 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
+import { BardMark } from '~/components/bard-mark'
 import { Button } from '~/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '~/components/ui/form'
 import { Input } from '~/components/ui/input'
 import { getSupabaseBrowserClient } from '~/lib/supabase/browser'
@@ -22,7 +22,7 @@ const loginSchema = z.object({
 })
 
 function safeRedirect(redirect: string | undefined) {
-  return redirect && redirect.startsWith('/') ? redirect : '/'
+  return redirect && redirect.startsWith('/') ? redirect : '/home'
 }
 
 function LoginPage() {
@@ -50,65 +50,83 @@ function LoginPage() {
   }
 
   return (
-    <div className='bg-neutral-950 w-full font-display text-white min-h-screen h-auto flex flex-col'>
-      <section className='flex flex-col items-center justify-center h-screen'>
-        <Card className='min-w-[30rem]'>
-          <CardHeader>
-            <CardTitle className='text-2xl font-semibold flex items-center'>
-              <span>Welcome back to</span>
-              <Link to='/' className='flex items-center hover:text-neutral-300 transition-colors ease-in-out duration-300'>
-                <img src='/logo.png' alt='Bard' className='ml-2 mr-1 size-6' height={512} width={512} /> Bard
-              </Link>
-            </CardTitle>
-            <CardDescription className='text-neutral-500 font-normal text-sm'>
-              Sign in with your email to continue
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className='flex flex-col space-y-6'>
-                <FormField
-                  control={form.control}
-                  name='email'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input type='email' placeholder='you@example.com' autoComplete='email' {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name='password'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input type='password' placeholder='••••••••' autoComplete='current-password' {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                {form.formState.errors.root && (
-                  <p className='text-red-500 text-sm'>{form.formState.errors.root.message}</p>
+    <div className="bg-background text-foreground relative grid min-h-svh md:grid-cols-2">
+      {/* The threshold: daylight on one side, the room on the other. */}
+      <span aria-hidden className="bg-signal/40 absolute inset-y-0 left-1/2 hidden w-px md:block" />
+
+      <aside className="hidden flex-col justify-between p-10 md:flex">
+        <Link to="/" className="flex items-center gap-2 text-lg font-semibold tracking-tight">
+          <BardMark className="size-5 text-foreground" />
+          Bard
+        </Link>
+        <div>
+          <h1 className="font-display text-5xl leading-[1.1] font-light tracking-tight">
+            You&rsquo;re at the door.
+          </h1>
+          <p className="text-muted-foreground mt-6 max-w-sm">
+            Sign in and step inside. Your threads stay on your own machine — Bard keeps them, no one
+            else.
+          </p>
+        </div>
+        <p className="text-muted-foreground font-mono text-xs">
+          Offline · local model · your database
+        </p>
+      </aside>
+
+      <section className="bg-card border-border flex flex-col justify-center border-t px-6 py-16 md:border-t-0 md:border-l md:px-16">
+        <div className="mx-auto w-full max-w-sm">
+          <Link to="/" className="mb-10 flex items-center gap-2 text-lg font-semibold md:hidden">
+            <BardMark className="size-5 text-foreground" />
+            Bard
+          </Link>
+
+          <h2 className="font-display text-2xl font-light">Sign in</h2>
+          <p className="text-muted-foreground mt-1 text-sm">Use the email you signed up with.</p>
+
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="mt-8 flex flex-col space-y-6">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="you@example.com" autoComplete="email" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
-                <Button type='submit' className='cursor-pointer' disabled={pending}>
-                  {pending ? 'Signing in…' : 'Sign in'}
-                </Button>
-              </form>
-            </Form>
-            <p className='text-neutral-500 text-sm pt-6'>
-              Don&apos;t have an account?{' '}
-              <Link to='/signup' className='text-white hover:underline'>
-                Sign up
-              </Link>
-            </p>
-          </CardContent>
-        </Card>
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="••••••••" autoComplete="current-password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {form.formState.errors.root && (
+                <p className="text-destructive text-sm">{form.formState.errors.root.message}</p>
+              )}
+              <Button type="submit" className="w-full cursor-pointer" disabled={pending}>
+                {pending ? 'Signing in…' : 'Sign in'}
+              </Button>
+            </form>
+          </Form>
+
+          <p className="text-muted-foreground mt-6 text-sm">
+            Don&rsquo;t have an account?{' '}
+            <Link to="/signup" className="text-signal hover:underline">
+              Sign up
+            </Link>
+          </p>
+        </div>
       </section>
     </div>
   )
