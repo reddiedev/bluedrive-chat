@@ -11,6 +11,11 @@ RUN corepack enable pnpm && corepack prepare pnpm@9 --activate && pnpm i --froze
 
 COPY . .
 
+# Vite inlines VITE_* at build time, so they must be present when building.
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_KEY
+ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL \
+    VITE_SUPABASE_KEY=$VITE_SUPABASE_KEY
 
 RUN pnpm run build
 

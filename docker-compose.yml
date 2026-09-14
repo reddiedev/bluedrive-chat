@@ -56,8 +56,13 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
+        VITE_SUPABASE_KEY: ${VITE_SUPABASE_KEY}
     environment:
       - BACKEND_BASE_URL=http://bd_backend:8000
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+      - VITE_SUPABASE_KEY=${VITE_SUPABASE_KEY}
     ports:
       - "${HOST_FRONTEND_PORT:-3000}:3000"
     networks:
