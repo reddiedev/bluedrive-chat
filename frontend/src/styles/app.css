@@ -1,10 +1,179 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+/* ---------------------------------------------------------------------------
+   Bard — typefaces, self-hosted.
 
-@theme {
-  --font-display: 'Inter', sans-serif;
+   This app's whole claim is that your words never leave your machine, so it
+   must not phone a font CDN on every load. All faces are served from /fonts.
+   Spectral          — display + the assistant's voice (literary serif)
+   Familjen Grotesk  — UI + the person's voice (variable 400–600)
+   Spline Sans Mono  — the machine (variable 400–500)
+--------------------------------------------------------------------------- */
+@font-face {
+  font-family: 'Spectral';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url('/fonts/spectral-300.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Spectral';
+  font-style: italic;
+  font-weight: 300;
+  font-display: swap;
+  src: url('/fonts/spectral-300-italic.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Spectral';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/spectral-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Spectral';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/spectral-400-italic.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Familjen Grotesk';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('/fonts/familjen-grotesk.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Spline Sans Mono';
+  font-style: normal;
+  font-weight: 400 500;
+  font-display: swap;
+  src: url('/fonts/spline-sans-mono.woff2') format('woff2');
+}
+
+/* ---------------------------------------------------------------------------
+   Semantic tokens.
+
+   Two complete themes. The dark ground is a coloured indigo ink (not black),
+   the light ground is a cool mineral porcelain (not cream). Brass is the one
+   accent in both, and it is reserved for the voice: the recitation trace,
+   focus, and the primary action.
+--------------------------------------------------------------------------- */
+:root {
+  --background: #e8e8e2;
+  --foreground: #1b1b1f;
+
+  --card: #f2f2ed;
+  --card-foreground: #1b1b1f;
+  --popover: #fbfbf8;
+  --popover-foreground: #1b1b1f;
+
+  --primary: #9a6e12;
+  --primary-foreground: #fbfbf8;
+  --secondary: #dedfd6;
+  --secondary-foreground: #1b1b1f;
+  --muted: #dedfd6;
+  --muted-foreground: #5e5f58;
+  --accent: #dfe0d7;
+  --accent-foreground: #1b1b1f;
+  --destructive: #c0392b;
+  --destructive-foreground: #fbfbf8;
+
+  --border: #cfd0c7;
+  --input: #c6c7bd;
+  --ring: #9a6e12;
+
+  --signal: #9a6e12;
+  --signal-fg: #fbfbf8;
+  --signal-soft: rgba(154, 110, 18, 0.28);
+  --live: #c0392b;
+
+  --sidebar: #e2e3da;
+  --sidebar-foreground: #1b1b1f;
+  --sidebar-accent: #d6d7cc;
+  --sidebar-accent-foreground: #1b1b1f;
+  --sidebar-border: #cfd0c7;
+  --sidebar-ring: #9a6e12;
+
+  color-scheme: light;
+}
+
+.dark {
+  --background: #121a33;
+  --foreground: #ede9e1;
+
+  --card: #1a2342;
+  --card-foreground: #ede9e1;
+  --popover: #222c4f;
+  --popover-foreground: #ede9e1;
+
+  --primary: #dfa93c;
+  --primary-foreground: #121a33;
+  --secondary: #222c4f;
+  --secondary-foreground: #ede9e1;
+  --muted: #1f2a4a;
+  --muted-foreground: #9aa2c4;
+  --accent: #223055;
+  --accent-foreground: #ede9e1;
+  --destructive: #e2564a;
+  --destructive-foreground: #121a33;
+
+  --border: #2a355c;
+  --input: #32406b;
+  --ring: #dfa93c;
+
+  --signal: #dfa93c;
+  --signal-fg: #121a33;
+  --signal-soft: rgba(223, 169, 60, 0.3);
+  --live: #e2564a;
+
+  --sidebar: #0e1428;
+  --sidebar-foreground: #ede9e1;
+  --sidebar-accent: #1f2a4a;
+  --sidebar-accent-foreground: #ede9e1;
+  --sidebar-border: #2a355c;
+  --sidebar-ring: #dfa93c;
+
+  color-scheme: dark;
+}
+
+@theme inline {
+  --font-display: 'Spectral', ui-serif, Georgia, serif;
+  --font-sans: 'Familjen Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Spline Sans Mono', ui-monospace, 'SFMono-Regular', monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-signal: var(--signal);
+  --color-signal-fg: var(--signal-fg);
+  --color-live: var(--live);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
 }
 
 @layer base {
@@ -20,16 +189,209 @@
     padding: 0;
     margin: 0;
   }
-  
+
   ol {
     list-style: none;
     padding: 0;
     margin: 0;
   }
 
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Links and other non-component controls get a visible brass focus ring.
+     Buttons/inputs manage their own ring, so `outline-none` wins there. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: var(--signal);
+    color: var(--signal-fg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@layer components {
+  /* Markdown, read as a transcript. The bard speaks in Spectral; the machine
+     reports in mono. The typography plugin is not installed, so the few
+     element rules markdown needs live here. */
+  .transcript {
+    font-family: var(--font-display);
+    font-size: 1.0625rem;
+    line-height: 1.7;
+  }
+
+  .transcript > :first-child {
+    margin-top: 0;
+  }
+
+  .transcript > :last-child {
+    margin-bottom: 0;
+  }
+
+  .transcript p {
+    margin: 0.75rem 0;
+  }
+
+  .transcript h1,
+  .transcript h2,
+  .transcript h3 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    line-height: 1.25;
+    margin: 1.5rem 0 0.5rem;
+  }
+
+  .transcript h1 {
+    font-size: 1.5rem;
+  }
+
+  .transcript h2 {
+    font-size: 1.3rem;
+  }
+
+  .transcript h3 {
+    font-size: 1.15rem;
+  }
+
+  .transcript ul,
+  .transcript ol {
+    margin: 0.75rem 0;
+    padding-left: 1.35rem;
+  }
+
+  .transcript ul > li {
+    list-style: disc;
+  }
+
+  .transcript ol > li {
+    list-style: decimal;
+  }
+
+  .transcript li {
+    margin: 0.25rem 0;
+  }
+
+  .transcript li::marker {
+    color: var(--muted-foreground);
+  }
+
+  .transcript a {
+    color: var(--signal);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .transcript blockquote {
+    border-left: 2px solid var(--signal);
+    color: var(--muted-foreground);
+    font-style: italic;
+    margin: 1rem 0;
+    padding-left: 1rem;
+  }
+
+  .transcript strong {
+    font-weight: 600;
+  }
+
+  .transcript hr {
+    border: 0;
+    border-top: 1px solid var(--border);
+    margin: 1.5rem 0;
+  }
+
+  .transcript table {
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    margin: 1rem 0;
+    width: 100%;
+  }
+
+  .transcript th,
+  .transcript td {
+    border: 1px solid var(--border);
+    padding: 0.4rem 0.6rem;
+    text-align: left;
+  }
+
+  .transcript th {
+    color: var(--muted-foreground);
+    font-weight: 500;
+  }
+
+  .transcript code {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+  }
+
+  .transcript pre code {
+    font-size: 0.82rem;
+    line-height: 1.6;
+  }
+
+  /* The assistant is still reciting: three breathing dots in the signal
+     colour, so an empty reply never shows as a grey block. */
+  .typing-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 1.5rem;
+  }
+
+  .typing-dots span {
+    width: 5px;
+    height: 5px;
+    border-radius: 9999px;
+    background-color: var(--signal);
+    animation: bard-typing 1.3s ease-in-out infinite;
+  }
+
+  .typing-dots span:nth-child(2) {
+    animation-delay: 0.16s;
+  }
+
+  .typing-dots span:nth-child(3) {
+    animation-delay: 0.32s;
+  }
+}
+
+@keyframes bard-typing {
+  0%,
+  70%,
+  100% {
+    opacity: 0.22;
+    transform: translateY(0);
+  }
+
+  35% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
 }
 
 @plugin 'tailwind-scrollbar';
 
 @layer theme, base, components, utilities;
-
