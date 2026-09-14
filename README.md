@@ -9,6 +9,7 @@ __Bard__ is an offline, full-stack AI chatbot application designed as a showcase
 - 🔌 **Pluggable LLM** – Any OpenAI-compatible API (e.g. Fireworks AI) or a local Ollama server
 - 💾 **Persistent Chat** – Session Handling and Conversation History via langchain-postgres
 - 🚀 **Chat Streaming** – Chat completions are streamed from server for UX
+- ⏱️ **Rate Limiting** – Per-user message caps (n messages per rolling window) enforced in the backend
 - 🐳 **Fully Containerized** – Easy to setup and run with Docker Compose
 
 ## Tech Stack

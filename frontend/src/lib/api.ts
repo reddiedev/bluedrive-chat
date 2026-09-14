@@ -118,6 +118,28 @@ export const streamCompletion = createServerFn({
       // Handle abort gracefully
       return new Response('', { status: 499 });
     }
+    if (axios.isAxiosError(error) && error.response) {
+      // The backend rejected the request (e.g. 429 rate limit). The response
+      // body is a stream, so collect it to recover the JSON `detail`.
+      const { status, data } = error.response
+      let detail = 'Failed to send message'
+      try {
+        const chunks: Buffer[] = []
+        for await (const chunk of data as AsyncIterable<Buffer>) {
+          chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
+        }
+        const payload = JSON.parse(Buffer.concat(chunks).toString('utf-8'))
+        if (typeof payload?.detail === 'string') {
+          detail = payload.detail
+        }
+      } catch {
+        // Keep the generic message if the body cannot be parsed
+      }
+      return new Response(JSON.stringify({ detail }), {
+        status,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
     console.error('Streaming error:', error);
     throw error;
   }

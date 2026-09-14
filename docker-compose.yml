@@ -38,6 +38,8 @@ services:
       - OPENAI_MODEL=${OPENAI_MODEL:-accounts/fireworks/models/deepseek-v4p1-flash}
       - OLLAMA_BASE_URL=http://bd_ollama:11434
       - DATABASE_URL=${DATABASE_URL}
+      - RATE_LIMIT_MAX_MESSAGES=${RATE_LIMIT_MAX_MESSAGES:-20}
+      - RATE_LIMIT_WINDOW_MINUTES=${RATE_LIMIT_WINDOW_MINUTES:-5}
     networks:
       bd_network:
         ipv4_address: "172.28.0.20"

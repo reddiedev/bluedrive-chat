@@ -24,6 +24,7 @@ from lib.database import (
     get_connection,
     table_name,
 )
+from lib.rate_limit import check_rate_limit, rate_limit_message
 
 load_dotenv()
 
@@ -191,8 +192,17 @@ async def chat(request: ChatRequest):
     if request.model not in get_models_names():
         raise HTTPException(status_code=400, detail="Invalid model")
 
-    # SESSION HANDLING
+    # RATE LIMITING
     conn = get_connection()
+    retry_after = check_rate_limit(conn, request.name)
+    if retry_after is not None:
+        raise HTTPException(
+            status_code=429,
+            detail=rate_limit_message(retry_after),
+            headers={"Retry-After": str(retry_after)},
+        )
+
+    # SESSION HANDLING
     session = get_session_by_id(conn, request.session_id)
     if not session:
         title = get_session_title(request.content)
@@ -242,8 +252,17 @@ async def stream(request: ChatRequest, background_tasks: BackgroundTasks):
     if request.model not in get_models_names():
         raise HTTPException(status_code=400, detail="Invalid model")
 
-    # SESSION HANDLING
+    # RATE LIMITING
     conn = get_connection()
+    retry_after = check_rate_limit(conn, request.name)
+    if retry_after is not None:
+        raise HTTPException(
+            status_code=429,
+            detail=rate_limit_message(retry_after),
+            headers={"Retry-After": str(retry_after)},
+        )
+
+    # SESSION HANDLING
     session = get_session_by_id(conn, request.session_id)
     if not session:
         title = get_session_title(request.content)
