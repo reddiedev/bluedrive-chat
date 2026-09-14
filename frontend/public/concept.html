@@ -1,0 +1,781 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Bard — identity sheet</title>
+    <style>
+      @font-face {
+        font-family: 'Spectral';
+        font-style: normal;
+        font-weight: 300;
+        src: url('fonts/spectral-300.woff2') format('woff2');
+      }
+      @font-face {
+        font-family: 'Spectral';
+        font-style: italic;
+        font-weight: 300;
+        src: url('fonts/spectral-300-italic.woff2') format('woff2');
+      }
+      @font-face {
+        font-family: 'Spectral';
+        font-style: normal;
+        font-weight: 400;
+        src: url('fonts/spectral-400.woff2') format('woff2');
+      }
+      @font-face {
+        font-family: 'Familjen Grotesk';
+        font-style: normal;
+        font-weight: 400 600;
+        src: url('fonts/familjen-grotesk.woff2') format('woff2');
+      }
+      @font-face {
+        font-family: 'Spline Sans Mono';
+        font-style: normal;
+        font-weight: 400 500;
+        src: url('fonts/spline-sans-mono.woff2') format('woff2');
+      }
+
+      :root {
+        --ink: #121a33;
+        --ink-raised: #1a2342;
+        --ink-rule: #2a355c;
+        --bone: #ede9e1;
+        --chalk: #9aa2c4;
+        --signal: #dfa93c;
+        --signal-fg: #121a33;
+        --porcelain: #e8e8e2;
+        --porcelain-raised: #f2f2ed;
+        --graphite: #1b1b1f;
+        --mortar: #cfd0c7;
+        --signal-deep: #9a6e12;
+        --live: #e2564a;
+
+        --display: 'Spectral', Georgia, serif;
+        --sans: 'Familjen Grotesk', system-ui, sans-serif;
+        --mono: 'Spline Sans Mono', ui-monospace, monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: #0b0f1c;
+        color: var(--bone);
+        font-family: var(--sans);
+        -webkit-font-smoothing: antialiased;
+        line-height: 1.5;
+      }
+
+      .sheet {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 0 24px 96px;
+      }
+
+      .eyebrow {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--chalk);
+        margin: 0;
+      }
+
+      .masthead {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 24px 0;
+        border-bottom: 1px solid var(--ink-rule);
+        margin-bottom: 72px;
+      }
+
+      .wordmark {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+        font-size: 19px;
+        letter-spacing: -0.01em;
+      }
+
+      .wordmark svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      h1.thesis {
+        font-family: var(--display);
+        font-weight: 300;
+        font-size: clamp(2.6rem, 6vw, 4.6rem);
+        line-height: 1.04;
+        letter-spacing: -0.02em;
+        margin: 0;
+        text-wrap: balance;
+      }
+
+      .lede {
+        font-family: var(--display);
+        font-size: 1.15rem;
+        line-height: 1.7;
+        max-width: 42rem;
+        margin: 28px 0 0;
+        color: var(--chalk);
+      }
+
+      .trace {
+        width: 100%;
+        max-width: 34rem;
+        height: 40px;
+        margin-top: 40px;
+        color: var(--signal);
+      }
+
+      section {
+        margin-top: 88px;
+      }
+
+      h2.section-title {
+        font-family: var(--mono);
+        font-size: 12px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--chalk);
+        margin: 0 0 24px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--ink-rule);
+      }
+
+      .swatch-grid {
+        display: grid;
+        gap: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      }
+
+      .panel {
+        border: 1px solid var(--ink-rule);
+        border-radius: 10px;
+        overflow: hidden;
+      }
+
+      .panel-head {
+        padding: 14px 18px;
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        border-bottom: 1px solid;
+      }
+
+      .day {
+        background: var(--porcelain);
+        color: var(--graphite);
+        border-color: var(--mortar);
+      }
+
+      .ink {
+        background: var(--ink);
+        color: var(--bone);
+        border-color: var(--ink-rule);
+      }
+
+      .day .panel-head {
+        border-color: var(--mortar);
+        color: #5e5f58;
+      }
+
+      .ink .panel-head {
+        border-color: var(--ink-rule);
+        color: var(--chalk);
+      }
+
+      .swatch-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 12px 18px;
+        border-top: 1px solid rgba(128, 128, 128, 0.25);
+      }
+
+      .swatch-row:first-of-type {
+        border-top: 0;
+      }
+
+      .chip {
+        width: 30px;
+        height: 30px;
+        border-radius: 6px;
+        flex: none;
+        border: 1px solid rgba(128, 128, 128, 0.35);
+      }
+
+      .swatch-meta {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+
+      .swatch-name {
+        font-family: var(--mono);
+        font-size: 12px;
+      }
+
+      .swatch-role {
+        font-size: 12.5px;
+        opacity: 0.7;
+      }
+
+      .type-row {
+        display: grid;
+        grid-template-columns: 150px 1fr;
+        gap: 24px;
+        padding: 22px 0;
+        border-top: 1px solid var(--ink-rule);
+        align-items: baseline;
+      }
+
+      .type-row:first-of-type {
+        border-top: 0;
+      }
+
+      .type-label {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--chalk);
+      }
+
+      .type-display {
+        font-family: var(--display);
+        font-weight: 300;
+        font-size: 2.6rem;
+        line-height: 1.1;
+        letter-spacing: -0.015em;
+        margin: 0;
+      }
+
+      .type-body {
+        font-family: var(--display);
+        font-size: 1.05rem;
+        line-height: 1.75;
+        max-width: 40rem;
+        margin: 0;
+      }
+
+      .type-mono {
+        font-family: var(--mono);
+        font-size: 0.9rem;
+        margin: 0;
+        line-height: 1.7;
+      }
+
+      .type-mono .lit {
+        color: var(--signal);
+      }
+
+      .screens {
+        display: grid;
+        gap: 24px;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      }
+
+      .screen {
+        border: 1px solid var(--ink-rule);
+        border-radius: 10px;
+        overflow: hidden;
+        min-height: 340px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .screen .bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 14px;
+        border-bottom: 1px solid;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .screen .body {
+        padding: 20px;
+        flex: 1;
+      }
+
+      .screen .foot {
+        padding: 10px 14px;
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        opacity: 0.65;
+        border-top: 1px solid;
+      }
+
+      .landing-h {
+        font-family: var(--display);
+        font-weight: 300;
+        font-size: 1.9rem;
+        line-height: 1.15;
+        margin: 10px 0 0;
+      }
+
+      .mini-trace {
+        width: 100%;
+        height: 22px;
+        margin-top: 16px;
+        color: var(--signal-deep);
+      }
+
+      .door {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 26px;
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        opacity: 0.65;
+      }
+
+      .door .rule {
+        height: 1px;
+        flex: 1;
+        background: currentColor;
+        opacity: 0.4;
+      }
+
+      .btn {
+        display: inline-block;
+        margin-top: 12px;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      .day .btn {
+        background: var(--signal-deep);
+        color: #fbfbf8;
+      }
+
+      .ink .btn {
+        background: var(--signal);
+        color: var(--signal-fg);
+      }
+
+      .field {
+        margin-top: 14px;
+      }
+
+      .field label {
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .field .input {
+        margin-top: 6px;
+        height: 34px;
+        border-radius: 6px;
+        border: 1px solid;
+        opacity: 0.9;
+      }
+
+      .threshold {
+        position: relative;
+      }
+
+      .threshold .seam {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 50%;
+        width: 1px;
+        background: var(--signal);
+        opacity: 0.5;
+      }
+
+      .thread {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 0;
+        font-size: 13px;
+      }
+
+      .thread .fp {
+        color: var(--signal);
+        height: 14px;
+        width: 26px;
+        flex: none;
+      }
+
+      .bubble-assistant {
+        border-left: 2px solid var(--signal);
+        padding-left: 12px;
+        margin-top: 14px;
+      }
+
+      .bubble-assistant .who,
+      .bubble-user .who {
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        opacity: 0.7;
+      }
+
+      .bubble-assistant p {
+        font-family: var(--display);
+        font-size: 1rem;
+        line-height: 1.6;
+        margin: 6px 0 0;
+      }
+
+      .bubble-user {
+        margin-top: 16px;
+        text-align: right;
+      }
+
+      .bubble-user .box {
+        display: inline-block;
+        margin-top: 6px;
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 1px solid;
+        font-size: 13px;
+        text-align: left;
+      }
+
+      .composer {
+        margin-top: 18px;
+        border: 1px solid;
+        border-radius: 10px;
+        padding: 10px 12px 0;
+        font-size: 13px;
+        opacity: 0.85;
+      }
+
+      .composer .strip {
+        border-top: 1px solid;
+        margin-top: 10px;
+        color: var(--signal);
+      }
+
+      .composer .strip svg {
+        width: 100%;
+        height: 18px;
+      }
+
+      footer {
+        margin-top: 96px;
+        padding-top: 24px;
+        border-top: 1px solid var(--ink-rule);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        justify-content: space-between;
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--chalk);
+      }
+
+      .note {
+        font-family: var(--display);
+        font-size: 1.02rem;
+        line-height: 1.7;
+        color: var(--chalk);
+        max-width: 46rem;
+      }
+
+      .note strong {
+        color: var(--bone);
+        font-weight: 400;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="sheet">
+      <header class="masthead">
+        <span class="wordmark">
+          <svg viewBox="0 0 512 512" aria-hidden="true">
+            <path
+              d="M64 192 448 64 352 448 224 320 128 384 160 224Z"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="40"
+              stroke-linejoin="round"
+            />
+          </svg>
+          Bard
+        </span>
+        <span class="eyebrow">Identity sheet · v1</span>
+      </header>
+
+      <section style="margin-top: 0">
+        <p class="eyebrow">The thesis</p>
+        <h1 class="thesis">Every word you say here, stays in this room.</h1>
+        <p class="lede">
+          Bard is a local-first chat app. The interface is a transcript of a private recitation — a
+          warm spoken voice in a cool machine, with the stream itself made visible.
+        </p>
+        <svg class="trace" viewBox="0 0 300 40" preserveAspectRatio="none" aria-hidden="true">
+          <path
+            d="M0 38 L6 24 L12 30 L18 14 L24 26 L30 10 L36 22 L42 16 L48 28 L54 12 L60 20 L66 8 L72 18 L78 26 L84 14 L90 22 L96 10 L102 20 L108 16 L114 24 L120 12 L126 20 L132 9 L138 18 L144 26 L150 14 L156 22 L162 11 L168 20 L174 16 L180 25 L186 13 L192 21 L198 10 L204 19 L210 27 L216 15 L222 23 L228 12 L234 20 L240 17 L246 24 L252 13 L258 21 L264 10 L270 19 L276 26 L282 15 L288 22 L294 12 L300 20 L300 40 L0 40 Z"
+            fill="currentColor"
+            fill-opacity="0.14"
+          />
+          <path
+            d="M0 38 L6 24 L12 30 L18 14 L24 26 L30 10 L36 22 L42 16 L48 28 L54 12 L60 20 L66 8 L72 18 L78 26 L84 14 L90 22 L96 10 L102 20 L108 16 L114 24 L120 12 L126 20 L132 9 L138 18 L144 26 L150 14 L156 22 L162 11 L168 20 L174 16 L180 25 L186 13 L192 21 L198 10 L204 19 L210 27 L216 15 L222 23 L228 12 L234 20 L240 17 L246 24 L252 13 L258 21 L264 10 L270 19 L276 26 L282 15 L288 22 L294 12 L300 20"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </section>
+
+      <section>
+        <h2 class="section-title">Signature — the recitation trace</h2>
+        <p class="note">
+          One memorable element: a thin brass field that makes the stream visible. In the composer it
+          rests flat when idle, rises and falls as tokens <strong>actually arrive</strong>, and
+          settles when the response ends. In the sidebar each saved thread keeps a tiny
+          fingerprint derived from that conversation's real rhythm — so threads are recognised by
+          their shape rather than an emoji. Same component, two scales.
+        </p>
+      </section>
+
+      <section>
+        <h2 class="section-title">Palette — two complete themes</h2>
+        <div class="swatch-grid">
+          <div class="panel day">
+            <div class="panel-head">Daylight · outside</div>
+            <div class="swatch-row">
+              <span class="chip" style="background: #e8e8e2"></span>
+              <span class="swatch-meta">
+                <span class="swatch-name">porcelain · #E8E8E2</span>
+                <span class="swatch-role">Ground. Cool mineral, never cream.</span>
+              </span>
+            </div>
+            <div class="swatch-row">
+              <span class="chip" style="background: #1b1b1f"></span>
+              <span class="swatch-meta">
+                <span class="swatch-name">graphite · #1B1B1F</span>
+                <span class="swatch-role">Primary text.</span>
+              </span>
+            </div>
+            <div class="swatch-row">
+              <span class="chip" style="background: #9a6e12"></span>
+              <span class="swatch-meta">
+                <span class="swatch-name">signal-deep · #9A6E12</span>
+                <span class="swatch-role">The voice, darkened for contrast on light.</span>
+              </span>
+            </div>
+            <div class="swatch-row">
+              <span class="chip" style="background: #cfd0c7"></span>
+              <span class="swatch-meta">
+                <span class="swatch-name">mortar · #CFD0C7</span>
+                <span class="swatch-role">Rules and dividers.</span>
+              </span>
+            </div>
+          </div>
+
+          <div class="panel ink">
+            <div class="panel-head">Interior · inside</div>
+            <div class="swatch-row">
+              <span class="chip" style="background: #121a33"></span>
+              <span class="swatch-meta">
+                <span class="swatch-name">ink · #121A33</span>
+                <span class="swatch-role">Ground. A coloured ink, not black.</span>
+              </span>
+            </div>
+            <div class="swatch-row">
+              <span class="chip" style="background: #ede9e1"></span>
+              <span class="swatch-meta">
+                <span class="swatch-name">bone · #EDE9E1</span>
+                <span class="swatch-role">Primary text.</span>
+              </span>
+            </div>
+            <div class="swatch-row">
+              <span class="chip" style="background: #dfa93c"></span>
+              <span class="swatch-meta">
+                <span class="swatch-name">signal · #DFA93C</span>
+                <span class="swatch-role">Brass — harp string, signal lamp.</span>
+              </span>
+            </div>
+            <div class="swatch-row">
+              <span class="chip" style="background: #9aa2c4"></span>
+              <span class="swatch-meta">
+                <span class="swatch-name">chalk · #9AA2C4</span>
+                <span class="swatch-role">Secondary text and metadata.</span>
+              </span>
+            </div>
+            <div class="swatch-row">
+              <span class="chip" style="background: #e2564a"></span>
+              <span class="swatch-meta">
+                <span class="swatch-name">live · #E2564A</span>
+                <span class="swatch-role">Errors and stop only.</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="section-title">Type — three roles, three voices</h2>
+        <div class="type-row">
+          <span class="type-label">Display · Spectral</span>
+          <div>
+            <p class="type-display">The room remembers.</p>
+            <p class="type-body" style="margin-top: 12px">
+              The bard speaks in prose; the machine reports in mono. Assistant replies are set in
+              Spectral — a literary serif with a carved, spoken quality — while the interface and
+              the person's own words stay in Familjen Grotesk.
+            </p>
+          </div>
+        </div>
+        <div class="type-row">
+          <span class="type-label">UI · Familjen Grotesk</span>
+          <div class="type-mono" style="font-family: var(--sans); font-size: 1.05rem">
+            New thread · Search your threads · What the room remembers · Sign out
+          </div>
+        </div>
+        <div class="type-row">
+          <span class="type-label">Machine · Spline Sans Mono</span>
+          <div class="type-mono">
+            [cmd/ctrl + /] new thread<br />
+            [shift + enter] new line · [enter] send<br />
+            model <span class="lit">qwen3:0.6b</span> · provider <span class="lit">ollama</span> ·
+            port <span class="lit">11434</span>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="section-title">Screens</h2>
+        <div class="screens">
+          <div class="screen day">
+            <div class="bar">
+              <span>Bard</span>
+              <span class="eyebrow" style="font-size: 9px">sys · day · ink</span>
+            </div>
+            <div class="body">
+              <span class="eyebrow" style="color: #5e5f58">Offline · on your machine</span>
+              <p class="landing-h">Every word you say here,<br />stays in this room.</p>
+              <svg class="mini-trace" viewBox="0 0 300 40" preserveAspectRatio="none" aria-hidden="true">
+                <path
+                  d="M0 38 L10 22 L20 28 L30 12 L40 24 L50 10 L60 20 L70 15 L80 26 L90 13 L100 20 L110 9 L120 18 L130 25 L140 14 L150 21 L160 11 L170 19 L180 16 L190 24 L200 12 L210 20 L220 10 L230 18 L240 25 L250 14 L260 21 L270 11 L280 19 L290 16 L300 22 L300 40 L0 40 Z"
+                  fill="currentColor"
+                  fill-opacity="0.16"
+                />
+              </svg>
+              <div class="door"><span>the door</span><span class="rule"></span></div>
+              <span class="btn">Step inside</span>
+            </div>
+            <div class="foot">Landing · the page performs the product</div>
+          </div>
+
+          <div class="screen ink threshold">
+            <div class="seam"></div>
+            <div class="bar">
+              <span>Bard</span>
+              <span class="eyebrow" style="font-size: 9px">threshold</span>
+            </div>
+            <div class="body" style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px">
+              <div>
+                <p class="landing-h" style="font-size: 1.5rem">You're at the door.</p>
+              </div>
+              <div>
+                <div class="field">
+                  <label>Email</label>
+                  <div class="input" style="border-color: var(--ink-rule)"></div>
+                </div>
+                <div class="field">
+                  <label>Password</label>
+                  <div class="input" style="border-color: var(--ink-rule)"></div>
+                </div>
+                <span class="btn">Sign in</span>
+              </div>
+            </div>
+            <div class="foot">Auth · the seam carries the concept</div>
+          </div>
+
+          <div class="screen ink">
+            <div class="bar">
+              <span>Bard</span>
+              <span class="eyebrow" style="font-size: 9px">inside</span>
+            </div>
+            <div class="body">
+              <span class="eyebrow">What the room remembers</span>
+              <div class="thread">
+                <svg class="fp" viewBox="0 0 60 16" preserveAspectRatio="none" aria-hidden="true">
+                  <path
+                    d="M0 14 L4 8 L8 10 L12 5 L16 9 L20 4 L24 8 L28 6 L32 10 L36 5 L40 8 L44 4 L48 7 L52 9 L56 6 L60 8 L60 16 L0 16 Z"
+                    fill="currentColor"
+                    fill-opacity="0.2"
+                  />
+                </svg>
+                Philippines Travel Guide
+              </div>
+              <div class="thread">
+                <svg class="fp" viewBox="0 0 60 16" preserveAspectRatio="none" aria-hidden="true">
+                  <path
+                    d="M0 13 L4 6 L8 9 L12 8 L16 4 L20 9 L24 5 L28 9 L32 6 L36 10 L40 5 L44 8 L48 6 L52 9 L56 7 L60 10 L60 16 L0 16 Z"
+                    fill="currentColor"
+                    fill-opacity="0.2"
+                  />
+                </svg>
+                Machine Learning Basics
+              </div>
+              <div class="bubble-assistant">
+                <span class="who">Assistant</span>
+                <p>Here's a way to think about it, in plain terms.</p>
+              </div>
+              <div class="bubble-user">
+                <span class="who">You</span>
+                <div class="box" style="border-color: var(--ink-rule); background: var(--ink-raised)">
+                  Teach me the basics of machine learning.
+                </div>
+              </div>
+              <div class="composer" style="border-color: var(--ink-rule)">
+                Type a message…
+                <div class="strip" style="border-color: var(--ink-rule)">
+                  <svg viewBox="0 0 300 40" preserveAspectRatio="none" aria-hidden="true">
+                    <path
+                      d="M0 38 L10 26 L20 30 L30 20 L40 28 L50 18 L60 26 L70 22 L80 30 L90 20 L100 27 L110 17 L120 25 L130 29 L140 21 L150 27 L160 18 L170 25 L180 23 L190 29 L200 20 L210 26 L220 18 L230 24 L240 30 L250 22 L260 27 L270 19 L280 25 L290 22 L300 27 L300 40 L0 40 Z"
+                      fill="currentColor"
+                      fill-opacity="0.14"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <div class="foot">Chat · prose in serif, machine in mono</div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="section-title">Notes</h2>
+        <p class="note">
+          Colour is spent once: brass is the voice, reserved for the trace, focus, and the primary
+          action. Everything around it is quiet. The dark ground is a coloured indigo ink rather
+          than black; the light ground is a cool mineral porcelain rather than cream. Gradients are
+          absent. The only hard hairline in the system is the door rule on the landing.
+        </p>
+      </section>
+
+      <footer>
+        <span>Bard — offline, self-hosted AI chat</span>
+        <span>Spectral · Familjen Grotesk · Spline Sans Mono (self-hosted)</span>
+      </footer>
+    </div>
+  </body>
+</html>
