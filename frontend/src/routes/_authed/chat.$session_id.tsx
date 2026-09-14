@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, Link, useNavigate, } from '@tanstack/react-router'
-import { ArrowUp, BookOpenIcon, Code2Icon, MessageCircleIcon, NewspaperIcon, SearchIcon, StarsIcon } from 'lucide-react'
+import { ArrowUp, BookOpenIcon, Code2Icon, LogOut, MessageCircleIcon, NewspaperIcon, SearchIcon, StarsIcon } from 'lucide-react'
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
@@ -25,12 +25,7 @@ import { cn, randomUUID } from '~/lib/utils'
 import ModelsChecker from '~/components/chat/models-checker'
 
 
-export const Route = createFileRoute('/chat/$session_id')({
-  validateSearch: (search: Record<string, unknown>) => {
-    return {
-      username: (search.username as string) || 'User',
-    }
-  },
+export const Route = createFileRoute('/_authed/chat/$session_id')({
   beforeLoad: async ({ params }) => {
     const models = await getModels()
     const session_id = params.session_id
@@ -56,7 +51,8 @@ export const Route = createFileRoute('/chat/$session_id')({
 })
 
 function ThreadsSidebar() {
-  const { username } = Route.useSearch()
+  const { user } = Route.useRouteContext()
+  const username = user.email ?? 'User'
   const { session_id } = Route.useParams()
   const { data: sessions } = useQuery({
     queryKey: ['sessions', username, session_id],
@@ -97,7 +93,7 @@ function ThreadsSidebar() {
 
   async function handleNewThread() {
     const session_id = randomUUID()
-    navigate({ to: '/chat/$session_id', params: { session_id }, search: { username } })
+    navigate({ to: '/chat/$session_id', params: { session_id } })
   }
 
   return (
@@ -137,7 +133,7 @@ function ThreadsSidebar() {
           <SidebarGroupContent className='flex flex-col gap-2'>
             {sessions?.map((session) =>
               <SidebarMenuItem key={session.id}>
-                <Link to={`/chat/$session_id`} search={{ username }} params={{ session_id: session.id }}>
+                <Link to={`/chat/$session_id`} params={{ session_id: session.id }}>
                   <SidebarMenuButton asChild>
                     <Button variant='ghost' className='w-full cursor-pointer justify-start'>
                       <span className="truncate">{formatTitle(session.title)}</span>
@@ -166,15 +162,23 @@ function ThreadsSidebar() {
           [cmd/ctrl + /] for new thread
           [cmd/ctrl + b] toggle sidebar
         </p>
-        <div className='flex items-center gap-2'>
-          <Avatar className='size-7'>
-            <AvatarImage src='https://cdn.reddie.dev/assets/avatar.jpg' />
-            <AvatarFallback>?</AvatarFallback>
-          </Avatar>
+        <div className='flex items-center gap-2 justify-between'>
+          <div className='flex items-center gap-2 min-w-0'>
+            <Avatar className='size-7'>
+              <AvatarImage src='https://cdn.reddie.dev/assets/avatar.jpg' />
+              <AvatarFallback>?</AvatarFallback>
+            </Avatar>
 
-          <span>
-            {username}
-          </span>
+            <span className='truncate'>
+              {username}
+            </span>
+          </div>
+
+          <Link to='/logout' title='Sign out'>
+            <Button variant='ghost' size='icon' className='cursor-pointer shrink-0'>
+              <LogOut />
+            </Button>
+          </Link>
         </div>
 
       </SidebarFooter>
@@ -186,8 +190,6 @@ function ThreadsSidebar() {
 
 
 function MessagesContainer({ messages }: { messages: MessageData[] }) {
-  const { username } = Route.useSearch()
-
   return (
     <div className='flex flex-col grow pb-52'>
       {messages.map((message) => (
@@ -199,7 +201,8 @@ function MessagesContainer({ messages }: { messages: MessageData[] }) {
 }
 
 function ChatContainer({ open }: { open: boolean }) {
-  const { username } = Route.useSearch()
+  const { user } = Route.useRouteContext()
+  const username = user.email ?? 'User'
   const { session_id } = Route.useParams()
   const { models } = Route.useLoaderData()
   const mainRef = useRef<HTMLDivElement>(null)
