@@ -3,7 +3,7 @@ from main import app
 import time
 import uuid
 from dotenv import load_dotenv
-from lib.database import sync_connection
+from lib.database import get_connection
 from lib.llm import get_default_model
 import contextlib
 
@@ -21,11 +21,12 @@ TEST_MODEL = get_default_model()
 @contextlib.contextmanager
 def transaction():
     """Context manager for database transactions"""
+    conn = get_connection()
     try:
         yield
-        sync_connection.commit()
+        conn.commit()
     except Exception:
-        sync_connection.rollback()
+        conn.rollback()
         raise
 
 

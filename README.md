@@ -14,7 +14,7 @@ __Bard__ is an offline, full-stack AI chatbot application designed as a showcase
 ## Tech Stack
 ![Tech Stack](/media/stack.png?raw=true)
 
-- **Database**: Postgres (Dockerized)
+- **Database**: Supabase (Postgres)
 - **LLM**: OpenAI-compatible API (e.g. Fireworks AI) or Ollama (via LangChain)
 - **Backend**: FastAPI (Python)
 - **Frontend**: React (Vite, TanStack Start), TailwindCSS, Shadcn UI
@@ -51,18 +51,18 @@ The application follows the typical workflow and user experience of most chat ap
 git clone https://github.com/reddiedev/bluedrive-chat 
 cd bluedrive-chat
 ```
-2. Load the default environment variables and add your API key
+2. Load the default environment variables and add your API key and Supabase connection string
 ```bash
 cp .env.example .env
 cp .env.example frontend/.env
 cp .env.example backend/.env
 # then set OPENAI_API_KEY (and OPENAI_MODEL/OPENAI_BASE_URL if not using the defaults)
+# and DATABASE_URL (the session pooler connection string from the Supabase dashboard)
 ```
 3. Reserve Host Ports
 Please pause/stop any services running on the following ports to prevent port conflict. Otherwise, please update the `.env` files or the `docker-compose` files
 - `3000` - Frontend React App
 - `8000` - Backend FastAPI Server
-- `5432` - Postgres Database
 - `11434` - Ollama API (only when using the optional `ollama` profile)
 
 4. Start the application stack
@@ -85,10 +85,23 @@ docker compose --profile ollama up --build
 
 
 
-### Building Locally
-You can run the `database` service stand-alone for local testing. Add the optional Ollama profile if you want a local LLM:
+### Database (Supabase)
+The database is hosted on Supabase. Schema changes are versioned as migrations under `supabase/migrations/`, and demo data lives in `supabase/seed.sql`.
+
 ```bash
-docker compose up -d --build database
+supabase link --project-ref <your-project-ref>  # once, links the CLI to the project
+supabase db push                                # apply migrations to the hosted database
+supabase db reset --linked                      # re-apply migrations + seed (wipes data)
+```
+
+For local development you can instead run a full local Supabase stack (requires Docker). Point `DATABASE_URL` at the connection string printed by `supabase start`:
+```bash
+supabase start
+```
+
+### Optional: Local Ollama
+Add the optional Ollama profile if you want a local LLM:
+```bash
 docker compose --profile ollama up -d --build ollama
 ```
 #### FastAPI Backend

@@ -21,7 +21,7 @@ from lib.prompts import chat_sys_msg
 from lib.database import (
     get_session_by_id,
     create_session_if_not_exists,
-    sync_connection,
+    get_connection,
     table_name,
 )
 
@@ -90,20 +90,21 @@ async def get_sessions(name: str):
     """
     formatted_name = unquote(name)
 
+    conn = get_connection()
     try:
-        with sync_connection.cursor() as cur:
+        with conn.cursor() as cur:
             cur.execute(
                 "SELECT id, username, title FROM db_sessions WHERE username = %s ORDER BY created_at DESC",
                 (formatted_name,),
             )
             result = cur.fetchall()
-            sync_connection.commit()  # Explicitly commit the transaction
+            conn.commit()  # Explicitly commit the transaction
 
             return [
                 Session(id=str(row[0]), title=row[2], username=row[1]) for row in result
             ]
     except Exception as e:
-        sync_connection.rollback()  # Rollback on error
+        conn.rollback()  # Rollback on error
         print(f"Database error in get_sessions: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
@@ -122,7 +123,7 @@ async def get_session(session_id: str):
     if not is_session_id_valid(session_id):
         raise HTTPException(status_code=400, detail="Invalid session ID")
 
-    with sync_connection.cursor() as cur:
+    with get_connection().cursor() as cur:
         cur.execute(
             "SELECT id, username, title FROM db_sessions WHERE id = %s",
             (session_id,),
@@ -191,15 +192,14 @@ async def chat(request: ChatRequest):
         raise HTTPException(status_code=400, detail="Invalid model")
 
     # SESSION HANDLING
-    session = get_session_by_id(sync_connection, request.session_id)
+    conn = get_connection()
+    session = get_session_by_id(conn, request.session_id)
     if not session:
         title = get_session_title(request.content)
         session = Session(id=request.session_id, title=title, username=request.name)
-        create_session_if_not_exists(
-            sync_connection, request.session_id, request.name, title
-        )
+        create_session_if_not_exists(conn, request.session_id, request.name, title)
     chat_history = PostgresChatMessageHistory(
-        table_name, request.session_id, sync_connection=sync_connection
+        table_name, request.session_id, sync_connection=conn
     )
     prev_messages = chat_history.get_messages()
 
@@ -243,16 +243,15 @@ async def stream(request: ChatRequest, background_tasks: BackgroundTasks):
         raise HTTPException(status_code=400, detail="Invalid model")
 
     # SESSION HANDLING
-    session = get_session_by_id(sync_connection, request.session_id)
+    conn = get_connection()
+    session = get_session_by_id(conn, request.session_id)
     if not session:
         title = get_session_title(request.content)
         session = Session(id=request.session_id, title=title, username=request.name)
-        create_session_if_not_exists(
-            sync_connection, request.session_id, request.name, title
-        )
+        create_session_if_not_exists(conn, request.session_id, request.name, title)
 
     chat_history = PostgresChatMessageHistory(
-        table_name, request.session_id, sync_connection=sync_connection
+        table_name, request.session_id, sync_connection=conn
     )
     prev_messages = chat_history.get_messages()
 
@@ -337,16 +336,8 @@ def validate_env_vars():
     else:
         if not os.getenv("OPENAI_API_KEY"):
             raise ValueError("OPENAI_API_KEY is not set")
-    if not os.getenv("POSTGRES_HOST"):
-        raise ValueError("POSTGRES_HOST is not set")
-    if not os.getenv("POSTGRES_PORT"):
-        raise ValueError("POSTGRES_PORT is not set")
-    if not os.getenv("POSTGRES_DB"):
-        raise ValueError("POSTGRES_DB is not set")
-    if not os.getenv("POSTGRES_USER"):
-        raise ValueError("POSTGRES_USER is not set")
-    if not os.getenv("POSTGRES_PASSWORD"):
-        raise ValueError("POSTGRES_PASSWORD is not set")
+    if not os.getenv("DATABASE_URL"):
+        raise ValueError("DATABASE_URL is not set")
     print("✅ Environment variables validated")
 
 

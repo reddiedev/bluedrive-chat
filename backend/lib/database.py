@@ -2,29 +2,52 @@ import os
 import psycopg
 from psycopg import Connection
 from lib.types import Session
-from langchain_postgres import PostgresChatMessageHistory
 
 # Database configuration
 table_name = "bd_chat_history"
-CONNECTION_STRING = (
-    f"postgresql://{os.getenv('POSTGRES_USER', 'myuser')}:{os.getenv('POSTGRES_PASSWORD', 'mypassword')}@{os.getenv('POSTGRES_HOST', 'localhost')}"
-    f":{os.getenv('POSTGRES_PORT', 5432)}/{os.getenv('POSTGRES_DB', 'mydatabase')}"
-)
+
+_sync_connection: Connection | None = None
 
 
-def create_db_sessions_table(conn: Connection):
-    with conn.cursor() as cur:
-        cur.execute(
-            """
-            CREATE TABLE IF NOT EXISTS db_sessions (
-                id UUID PRIMARY KEY,
-                username VARCHAR(255) NOT NULL,
-                title VARCHAR(255) NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-            """
-        )
-        conn.commit()
+def get_db_connection() -> Connection:
+    """
+    Creates and returns a new database connection.
+
+    The schema is managed by Supabase migrations (see supabase/migrations), so no
+    tables are created here.
+
+    Returns:
+        Connection: An active database connection
+    """
+    if not os.getenv("DATABASE_URL"):
+        raise ValueError("DATABASE_URL is not set")
+    # prepare_threshold=None keeps psycopg's automatic prepared statements disabled,
+    # which is required for Supabase's transaction pooler and harmless elsewhere.
+    return psycopg.connect(os.getenv("DATABASE_URL"), prepare_threshold=None)
+
+
+def get_connection() -> Connection:
+    """
+    Returns a live module-level connection, reconnecting if the existing one has
+    been closed or dropped by the server (e.g. an idle connection reaped by Supabase).
+
+    Returns:
+        Connection: An active database connection
+    """
+    global _sync_connection
+
+    if _sync_connection is None or _sync_connection.closed:
+        _sync_connection = get_db_connection()
+        return _sync_connection
+
+    try:
+        with _sync_connection.cursor() as cur:
+            cur.execute("SELECT 1")
+        _sync_connection.commit()
+    except psycopg.Error:
+        _sync_connection = get_db_connection()
+
+    return _sync_connection
 
 
 def get_session_by_id(conn: Connection, session_id: str) -> Session | None:
@@ -73,20 +96,3 @@ def create_session_if_not_exists(
             (session_id, user_name, session_title),
         )
         conn.commit()
-
-
-def get_db_connection() -> Connection:
-    """
-    Creates and returns a database connection, initializing required tables.
-
-    Returns:
-        Connection: An active database connection
-    """
-    connection = psycopg.connect(CONNECTION_STRING)
-    PostgresChatMessageHistory.create_tables(connection, table_name)
-    create_db_sessions_table(connection)
-    return connection
-
-
-# Initialize the connection
-sync_connection = get_db_connection()
