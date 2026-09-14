@@ -1,15 +1,63 @@
-import { User } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
+import { BrainIcon, ChevronDownIcon, User } from "lucide-react"
 import { BardMark } from "~/components/bard-mark"
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar"
 import { MessageData } from "~/lib/api.types"
+import { parseThinking } from "~/lib/thinking"
 import { cn } from "~/lib/utils"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import rehypeHighlight from "rehype-highlight"
 import rehypeRaw from "rehype-raw"
 
+function ThinkingBlock({
+  thinking,
+  inProgress,
+}: {
+  thinking: string
+  inProgress: boolean
+}) {
+  const [open, setOpen] = useState(inProgress)
+  const wasInProgress = useRef(inProgress)
+
+  // Collapse automatically once the visible answer starts streaming.
+  useEffect(() => {
+    if (wasInProgress.current && !inProgress) {
+      setOpen(false)
+    }
+    wasInProgress.current = inProgress
+  }, [inProgress])
+
+  return (
+    <div className="border-border bg-muted/30 my-1 overflow-hidden rounded-[8px] border">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        className="text-muted-foreground hover:text-foreground flex w-full cursor-pointer items-center gap-2 px-3 py-2 font-mono text-[11px] tracking-[0.16em] uppercase transition-colors"
+        aria-expanded={open}
+      >
+        <BrainIcon className="size-3.5 shrink-0" />
+        <span>{inProgress ? 'Thinking…' : 'Thought process'}</span>
+        <ChevronDownIcon
+          className={cn(
+            'ml-auto size-3.5 shrink-0 transition-transform',
+            open && 'rotate-180',
+          )}
+        />
+      </button>
+      {open && thinking !== "" && (
+        <div className="text-muted-foreground whitespace-pre-wrap px-3 pb-3 text-[13px] leading-relaxed">
+          {thinking}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function MessageBox({ message }: { message: MessageData }) {
   const isUser = message.role === "user"
+
+  const { thinking, answer, thinkingInProgress } = parseThinking(message.content)
 
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp)
@@ -55,7 +103,10 @@ export function MessageBox({ message }: { message: MessageData }) {
       </div>
       <div className="border-signal/50 flex min-w-0 max-w-[46rem] flex-col gap-2 border-l-2 pl-4">
         {name}
-        {message.content !== "" ? (
+        {thinking !== null && (
+          <ThinkingBlock thinking={thinking} inProgress={thinkingInProgress} />
+        )}
+        {answer !== "" ? (
           <div className="transcript">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
@@ -83,17 +134,17 @@ export function MessageBox({ message }: { message: MessageData }) {
                 ),
               }}
             >
-              {message.content}
+              {answer}
             </ReactMarkdown>
           </div>
-        ) : (
+        ) : thinking === null ? (
           <span className="typing-dots" role="status" aria-label="Assistant is replying">
             <span />
             <span />
             <span />
           </span>
-        )}
-        {message.content !== "" && time}
+        ) : null}
+        {answer !== "" && time}
       </div>
     </div>
   )

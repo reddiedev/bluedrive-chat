@@ -21,8 +21,11 @@ from lib.prompts import chat_sys_msg
 from lib.database import (
     get_session_by_id,
     create_session_if_not_exists,
+    update_session_title,
     get_connection,
+    get_db_connection,
     table_name,
+    NEW_SESSION_TITLE,
 )
 from lib.rate_limit import check_rate_limit, rate_limit_message
 
@@ -228,6 +231,32 @@ async def chat(request: ChatRequest):
     return JSONResponse(content={"message": response})
 
 
+def generate_session_title(session_id: str, content: str, model: str) -> None:
+    """
+    Generate and persist a session title after the response has been sent.
+
+    Runs as a background task so the title LLM call never delays the streamed
+    reply. Uses its own short-lived connection because psycopg connections are
+    not thread-safe and background tasks execute on a worker thread.
+    """
+    try:
+        title = get_session_title(content, model)
+    except Exception as e:
+        # Fall back to a snippet of the message so the frontend stops polling
+        # for a title that will never arrive.
+        print(f"Error generating session title: {str(e)}")
+        title = content.strip().replace("\n", " ")[:100] or NEW_SESSION_TITLE
+
+    try:
+        conn = get_db_connection()
+        try:
+            update_session_title(conn, session_id, title)
+        finally:
+            conn.close()
+    except Exception as e:
+        print(f"Error saving session title: {str(e)}")
+
+
 @app.post("/stream")
 async def stream(request: ChatRequest, background_tasks: BackgroundTasks):
     """
@@ -264,10 +293,17 @@ async def stream(request: ChatRequest, background_tasks: BackgroundTasks):
 
     # SESSION HANDLING
     session = get_session_by_id(conn, request.session_id)
-    if not session:
-        title = get_session_title(request.content)
-        session = Session(id=request.session_id, title=title, username=request.name)
-        create_session_if_not_exists(conn, request.session_id, request.name, title)
+    is_new_session = session is None
+    if is_new_session:
+        # The title is generated in a background task so it never delays the
+        # first streamed token. The placeholder tells the frontend's sidebar to
+        # keep polling until the real title lands.
+        session = Session(
+            id=request.session_id, title=NEW_SESSION_TITLE, username=request.name
+        )
+        create_session_if_not_exists(
+            conn, request.session_id, request.name, NEW_SESSION_TITLE
+        )
 
     chat_history = PostgresChatMessageHistory(
         table_name, request.session_id, sync_connection=conn
@@ -289,41 +325,19 @@ async def stream(request: ChatRequest, background_tasks: BackgroundTasks):
 
     # RESPONSE STREAMING
     full_response = ""
-    buffer = ""
-    in_think_block = False
 
     async def stream_response():
-        nonlocal full_response, buffer, in_think_block
+        nonlocal full_response
+        # Tokens, including the <think> reasoning block, are forwarded to the
+        # client as soon as they arrive so the first byte is not delayed until
+        # reasoning completes. The frontend renders the think block as a
+        # collapsible section and keeps it out of the final answer.
         async for chunk in model_with_streaming.astream(messages):
             token = extract_text(chunk.content)
             if not token:
                 continue
-
-            buffer += token
             full_response += token
-
-            # Check for think tags
-            if "<think>" in buffer and not in_think_block:
-                # Find the start of the think block
-                think_start = buffer.find("<think>")
-                # Output everything before the think block
-                if think_start > 0:
-                    yield buffer[:think_start]
-                buffer = buffer[think_start:]
-                in_think_block = True
-
-            # Check for end of think block
-            if "</think>" in buffer and in_think_block:
-                # Find the end of the think block
-                think_end = buffer.find("</think>") + len("</think>")
-                # Remove the think block from buffer
-                buffer = buffer[think_end:]
-                in_think_block = False
-
-            # If we're not in a think block and have content, yield it
-            if not in_think_block and buffer:
-                yield buffer
-                buffer = ""
+            yield token
 
     response = StreamingResponse(
         stream_response(), media_type="text/plain; charset=utf-8"
@@ -338,6 +352,12 @@ async def stream(request: ChatRequest, background_tasks: BackgroundTasks):
         chat_history.add_messages([new_usr_msg, new_ai_msg])
 
     background_tasks.add_task(store_messages)
+
+    # TITLE GENERATION (new sessions only, off the response path)
+    if is_new_session:
+        background_tasks.add_task(
+            generate_session_title, request.session_id, request.content, request.model
+        )
 
     return response
 

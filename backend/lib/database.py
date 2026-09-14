@@ -6,6 +6,10 @@ from lib.types import Session
 # Database configuration
 table_name = "bd_chat_history"
 
+# Placeholder title for a freshly created session. The real title is generated
+# in the background, and the frontend polls while a session carries this title.
+NEW_SESSION_TITLE = "🧵 New Thread"
+
 _sync_connection: Connection | None = None
 
 
@@ -96,3 +100,20 @@ def create_session_if_not_exists(
             (session_id, user_name, session_title),
         )
         conn.commit()
+
+
+def update_session_title(conn: Connection, session_id: str, session_title: str):
+    """
+    Update the title of an existing session.
+
+    Args:
+        conn (Connection): The active database connection.
+        session_id (str): The UUID of the session to update.
+        session_title (str): The new title for the session.
+    """
+    with conn.cursor() as cur:
+        cur.execute(
+            "UPDATE db_sessions SET title = %s WHERE id = %s",
+            (session_title, session_id),
+        )
+    conn.commit()
